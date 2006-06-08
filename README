@@ -1,0 +1,22 @@
+This is a mirror of http://www.vim.org/scripts/script.php?script_id=1571
+
+PHP syntax file, with several bug fixes, improvements and additions.  Should be up-to-date with all features of PHP 5.1.4.  If anything is missing, broken, not working well on your setup, or an inconvenience for you, please let me know, all feedback is welcome: <toomuchphp-vim at yahoo.com>.
+
+
+New and improved highlighting features include:
+===============================================
+
+- User-defined special functions (__autoload(), __construct(), etc)
+- Built-in constants (STDIN, STR_PAD_LEFT, etc)
+- Built-in classes (stdClass, Exception, Reflection, etc)
+- Built-in interfaces (Iterator, Serializable, etc)
+- Complex expressions inside double-quoted strings using { }
+- Support for PCRE patterns
+  (Patterns are only recognized if the pattern is inside the
+  function call.)
+- Braces are colored to help you see when they are mismatched.
+
+
+* You can find a complete list of available options near the top of the syntax file.
+
+* Release 0.9 is the official 'stable' release, however I do encourage you to use the latest version as it shouldn't have any bugs either.
