@@ -1,7 +1,9 @@
 " Vim syntax file
 " Language:	php PHP 3/4/5
 " Maintainer:	Peter Hodge <toomuchphp-vim@yahoo.com>
-" Last Change:	June 9, 2006
+" Last Change:	June 13, 2006
+" URL: http://www.vim.org/scripts/script.php?script_id=1571
+" Version: 0.9.1 (0.9 until I'm fairly confident there's no bugs ...)
 "
 " Former Maintainer:	Debian VIM Maintainers <pkg-vim-maintainers@lists.alioth.debian.org>
 " Former URL: http://svn.debian.org/wsvn/pkg-vim/trunk/runtime/syntax/php.vim?op=file&rev=0&sc=0
@@ -27,16 +29,111 @@
 "                             x=0 to sync from start
 "
 "      	Added by Peter Hodge On June 9, 2006:
+"           php_special_variables = 1|0 to highlight the built-in variables
 "           php_special_functions = 1|0 to highlight functions with abnormal behaviour
 "           php_alt_comparisons = 1|0 to highlight comparison operators in an alternate colour
 "           php_alt_assignByReference = 1|0 to highlight '= &' in an alternate colour
+"           php_show_semicolon = 1|0 to make the semicolon ';' more visible
 "
 "	          Note: these all default to 1 (On), so you would set them to '0' to turn them off.
 "		              E.g., in your .vimrc or _vimrc file:
+"		                let php_special_variables = 0
 "		                let php_special_functions = 0
 "		                let php_alt_comparisons = 0
-"		                let php_alt_assignByReference = 0
+"		                etc.
 "		              Unletting these variables will revert back to their default (On).
+"
+"		    Added by Peter Hodge on June 16, 2006:
+"		        php_show_preg = 1 to highlight regular expressions inside calls to
+"	                    	      preg_match() etc. (defaults to OFF)
+"		        Note: This feature is very new and quite complicated, and I
+"		              haven't had time to put in some of the more advanced
+"		              features for this week's release.
+"		              Also Be Aware: that this feature *only* works inside an
+"		              unbroken single-quoted string for now, and the only
+"		              delimiters available are /, !, and ~.
+"
+" ================================================================
+"
+"		        Help: Making the colours for preg_* patterns work together
+"	       	        across different colorschemes is quite impossible for me
+"	       	        to do on my own, because I don't know what colorscheme you
+"	       	        are using. If you are using colorscheme 'elflord' (so far the most
+"		              effective colors I have found for PHP in a color terminal)
+"		              then the colors should be fine.  If you are using a
+"		              different colorscheme, you can use this short guide to check
+"		              if you are seeing all 9 parts of the preg highlighting:
+"
+"		                  Errors: Should work reliably across all platforms
+"
+"		                  Ambiguous Items: Should work reliably across all platforms
+"		                                   (will show up like a TODO item)
+"
+"		                  Green:  I. '\' has two meanings: 1) escape something in
+"                                PHP or 2) escape something in the pattern. When
+"                                '\' is recognized as a PHP escape which will not
+"                                become part of the pattern, then the \ character
+"                                is highlighted in green.
+"                            II. Pattern options (like 'i' for ignore-case) which
+"                                follow the final delimiter will be highlighted
+"                                in green.
+"                           III. Escape sequences with special meaning inside a
+"                                character class (such as \n or \s) are
+"                                highlighted in green.
+"
+"                     Yellow: The delimiter (currenly only /, !, or ~) should
+"                             be yellow across most platforms.  If a \ is used
+"                             to give the delimiter its literal meaning within
+"                             the pattern, then that \ will be yellow, but the
+"                             escaped delimiter will take on the color for
+"                             however it will be interpreted by the pattern
+"                             (i.e., either a regular escaped atom or part of
+"                             a character class.)
+"
+"                             Yellow is also used for a special sequence (such
+"                             as \r or \s) inside a *negative* character
+"                             class.
+"
+"		                  Normal: regular atoms are not highlighted in any colour.
+"
+"		                  Comments Color: When a special character (including the
+"		                                  delimiter) is escaped so it matches literally, it is
+"		                                  highlighted in the Comments colour.
+"
+"		                  PreProc Color: Is used for special characters (such as $
+"	               	                   or . ), quantifiers, parenthesis and
+"	               	                   surrounding character classes.  If -, ],
+"	               	                   ^, or \ is escaped inside a character
+"	               	                   class, then \ will also be highlighted in
+"	               	                   the PreProc color to indicate it is not
+"	               	                   part of the character class.
+"
+"	               	    Function Color: Is used for characters inside an
+"	               	                    inclusive character class.
+"
+"	               	    String Color: Is used for characters inside an exclusive
+"	               	                  character class.
+"
+"                 If you find that your colorscheme does not distinguish well
+"                 between elements of the pattern, or if you notice anything
+"                 missing, please do email me with a screenshot, the name of
+"                 the colorscheme you are using, etc, and I will do my best to
+"                 swap highlight linkings around so that they can work for
+"                 you.  On request, I can also send you a PHP file with about
+"                 70 sample patterns if you are interested in seeing the full
+"                 range of supported features.
+"
+"                 If you find the colors confusing (getting the right number
+"                 of \ characters can be tricky at first) please email me and
+"                 I will explain to you how they work.
+"
+"                 I hope to make some more progress on this feature by next
+"                 Friday, all feedback is welcome: <toomuchphp-vim@yahoo.com>
+"
+"                 - Peter
+"
+" ================================================================
+"
 "
 "
 " Note:
@@ -61,6 +158,13 @@
 "    as object member variables, but PHP only recognizes the first
 "    object member variable ($foo->someVar).
 "
+"
+" TODO:
+"   - review support for PHP built-in globals.
+"     - recognize indexes for GLOBALS, _SERVER, _ENV, etc.
+"   - review support for PHP built-in constants.
+"   - move new 'hi link' commands to end of file with the others
+"   - change 'const' keyword to same colour as 'private/public' keywords
 "
 
 " For version 5.x: Clear all syntax items
@@ -352,15 +456,20 @@ else
   syn match	phpComment	"//.\{-}?>"me=e-2	contained contains=phpTodo
 endif
 
+" Peter Hodge - June 13, 2006
+" - changed the matchgroup on these three regions from 'None'
+"   to 'phpQuote<type>' so that they can be coloured individually
+"   (which I have done below).
+
 " String
 if exists("php_parent_error_open")
-  syn region	phpStringDouble	matchgroup=None start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex	contained keepend
-  syn region	phpBacktick	matchgroup=None start=+`+ skip=+\\\\\|\\"+ end=+`+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex	contained keepend
-  syn region	phpStringSingle	matchgroup=None start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings contained keepend
+  syn region	phpStringDouble	matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex	contained keepend
+  syn region	phpBacktick	matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\"+ end=+`+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex	contained keepend
+  syn region	phpStringSingle	matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings contained keepend
 else
-  syn region	phpStringDouble	matchgroup=None start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
-  syn region	phpBacktick	matchgroup=None start=+`+ skip=+\\\\\|\\"+ end=+`+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
-  syn region	phpStringSingle	matchgroup=None start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings contained keepend extend
+  syn region	phpStringDouble	matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
+  syn region	phpBacktick	matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\"+ end=+`+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
+  syn region	phpStringSingle	matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings contained keepend extend
 endif
 
 " HereDoc
@@ -510,8 +619,14 @@ syntax keyword phpInterfaces containedin=ALLBUT,phpComment,phpStringDouble,phpSt
   \ Iterator IteratorAggregate RecursiveIterator OuterIterator SeekableIterator
   \ Traversable ArrayAccess Serializable Countable SplObserver SplSubject Reflector
 highlight link phpInterfaces phpConstant
+"
+" add php_errormsg as a special variable
+syn keyword	phpIntVar	contained php_errormsg
 
 " option defaults:
+if ! exists('php_special_variables')
+    let php_special_variables = 1
+endif
 if ! exists('php_special_functions')
     let php_special_functions = 1
 endif
@@ -520,6 +635,23 @@ if ! exists('php_alt_comparisons')
 endif
 if ! exists('php_alt_assignByReference')
     let php_alt_assignByReference = 1
+endif
+if ! exists('php_show_semicolon')
+    let php_show_semicolon = 1
+endif
+
+if php_show_semicolon
+  " highlight the semicolon same colour as 'echo'
+  syntax match phpSemicolon /;/ contained containedin=phpRegion
+  hi def link phpSemicolon phpDefine
+endif
+
+if php_special_variables
+  hi link phpIntVar phpOperator
+  hi link phpEnvVar phpOperator
+else
+  hi link phpIntVar phpIdentifier
+  hi link phpEnvVar phpIdentifier
 endif
 
 if php_special_functions
@@ -530,7 +662,7 @@ if php_special_functions
     " - eval() is the token 'make_your_code_twice_as_complex()' function for PHP.
     " - user_error()/trigger_error() can be overloaded by set_error_handler and also
     "   have the capacity to terminate your script when type is E_USER_ERROR.
-    syntax keyword phpSpecialFunction containedin=ALLBUT,phpComment,phpStringDouble,phpStringSingle
+    syntax keyword phpSpecialFunction containedin=ALLBUT,phpComment,phpStringDouble,phpStringSingle,phpIdentifier
 	\ user_error trigger_error isset unset eval extract compact empty
 endif
 
@@ -551,6 +683,11 @@ if php_alt_comparisons
 
 	hi link phpComparison Statement
 endif
+
+" highlighting for the '@' error-supressing operator
+syntax match phpSupressErrors /@/ contained display
+syntax cluster phpClConst add=phpSupressErrors
+highlight link phpSupressErrors phpDefine
 
 " ================================================================
 
@@ -595,9 +732,37 @@ if version >= 508 || !exists("did_php_syn_inits")
   HiLink	 phpSCKeyword	StorageClass
   HiLink	 phpFCKeyword	Define
   HiLink	 phpStructure	Structure
+
   HiLink	 phpStringSingle	String
   HiLink	 phpStringDouble	String
   HiLink	 phpBacktick	String
+
+  " ================================================================
+  " Peter Hodge - June 13, 2006
+  " - under some colourschemes, it is less clear to have the quote
+  "   characters highlighted like the strings (which is probably why
+  "   the matchgroup was deliberately set to 'None'.)  You can
+  "   highlight the quote characters also by turning on the following
+  "   option.
+
+  " TODO: mention this at top of file
+  if ! exists('php_highlight_quotes')
+    " default OFF
+    let php_highlight_quotes = 0
+  endif
+
+  if php_highlight_quotes
+    HiLink   phpQuoteSingle String
+    HiLink   phpQuoteDouble String
+    HiLink   phpQuoteBacktick Operator
+  else
+    HiLink   phpQuoteSingle None
+    HiLink   phpQuoteDouble None
+    HiLink   phpQuoteBacktick None
+  endif
+
+  " ================================================================
+
   HiLink	 phpNumber	Number
   HiLink	 phpFloat	Float
   HiLink	 phpMethods	Function
@@ -638,6 +803,16 @@ if version >= 508 || !exists("did_php_syn_inits")
 
   delcommand HiLink
 endif
+
+" ================================================================
+" Added by Peter Hodge, June 16, 2006
+" - optional support for PCRE extension (preg_* functions)
+
+if exists('php_show_preg') && php_show_preg
+  runtime syntax/php_preg.vim
+endif
+
+" ================================================================
 
 let b:current_syntax = "php"
 
