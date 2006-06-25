@@ -1,139 +1,113 @@
 " Vim syntax file
-" Language:	php PHP 3/4/5
-" Maintainer:	Peter Hodge <toomuchphp-vim@yahoo.com>
-" Last Change:	June 13, 2006
-" URL: http://www.vim.org/scripts/script.php?script_id=1571
-" Version: 0.9.1 (0.9 until I'm fairly confident there's no bugs ...)
+" Language:     php PHP 3/4/5
+" Maintainer:   Peter Hodge <toomuchphp-vim@yahoo.com>
+" Last Change:  June 25, 2006
 "
-" Former Maintainer:	Debian VIM Maintainers <pkg-vim-maintainers@lists.alioth.debian.org>
-" Former URL: http://svn.debian.org/wsvn/pkg-vim/trunk/runtime/syntax/php.vim?op=file&rev=0&sc=0
+" URL:      http://www.vim.org/scripts/script.php?script_id=1571
+" Version:  0.9.2
+"
+" ================================================================
+"
+" Note: The PCRE syntax is very dense and has many complex matches,
+"       so if you are having speed issues with PHP syntax, try adding
+"           let php_show_preg = 0
+"       to your .vimrc file.
 "
 " Note: If you are using a colour terminal with dark background, you will probably find
 "       the 'elflord' colorscheme is much better for PHP's syntax than the default
 "       colourscheme, because elflord's colours will better highlight the break-points
 "       (Statements) in your code.
 "
-" Options:  php_sql_query = 1  for SQL syntax highlighting inside strings
-"	        	php_htmlInStrings = 1  for HTML syntax highlighting inside strings
-"	        	php_baselib = 1  for highlighting baselib functions
-"	        	php_asp_tags = 1  for highlighting ASP-style short tags
-"	        	php_parent_error_close = 1  for highlighting parent error ] or )
-"	        	php_parent_error_open = 1  for skipping an php end tag, if there exists an open ( or [ without a closing one
-"	        	php_oldStyle = 1  for using old colorstyle
-"	        	php_noShortTags = 1  don't sync <? ?> as php
-"	        	php_folding = 1  for folding classes and functions
-"	        	php_folding = 2  for folding all { } regions
-"	        	php_sync_method = x
-"                             x=-1 to sync by search ( default )
-"                             x>0 to sync at least x lines backwards
-"                             x=0 to sync from start
-"
-"      	Added by Peter Hodge On June 9, 2006:
-"           php_special_variables = 1|0 to highlight the built-in variables
-"           php_special_functions = 1|0 to highlight functions with abnormal behaviour
-"           php_alt_comparisons = 1|0 to highlight comparison operators in an alternate colour
-"           php_alt_assignByReference = 1|0 to highlight '= &' in an alternate colour
-"           php_show_semicolon = 1|0 to make the semicolon ';' more visible
-"
-"	          Note: these all default to 1 (On), so you would set them to '0' to turn them off.
-"		              E.g., in your .vimrc or _vimrc file:
-"		                let php_special_variables = 0
-"		                let php_special_functions = 0
-"		                let php_alt_comparisons = 0
-"		                etc.
-"		              Unletting these variables will revert back to their default (On).
-"
-"		    Added by Peter Hodge on June 16, 2006:
-"		        php_show_preg = 1 to highlight regular expressions inside calls to
-"	                    	      preg_match() etc. (defaults to OFF)
-"		        Note: This feature is very new and quite complicated, and I
-"		              haven't had time to put in some of the more advanced
-"		              features for this week's release.
-"		              Also Be Aware: that this feature *only* works inside an
-"		              unbroken single-quoted string for now, and the only
-"		              delimiters available are /, !, and ~.
-"
 " ================================================================
 "
-"		        Help: Making the colours for preg_* patterns work together
-"	       	        across different colorschemes is quite impossible for me
-"	       	        to do on my own, because I don't know what colorscheme you
-"	       	        are using. If you are using colorscheme 'elflord' (so far the most
-"		              effective colors I have found for PHP in a color terminal)
-"		              then the colors should be fine.  If you are using a
-"		              different colorscheme, you can use this short guide to check
-"		              if you are seeing all 9 parts of the preg highlighting:
+" Options:  - php_sql_query = 1
+"             ... for SQL syntax highlighting inside strings
 "
-"		                  Errors: Should work reliably across all platforms
+"           - php_htmlInStrings = 1
+"             ... for HTML syntax highlighting inside strings
 "
-"		                  Ambiguous Items: Should work reliably across all platforms
-"		                                   (will show up like a TODO item)
+"           - php_baselib = 1
+"             ... for highlighting baselib functions
 "
-"		                  Green:  I. '\' has two meanings: 1) escape something in
-"                                PHP or 2) escape something in the pattern. When
-"                                '\' is recognized as a PHP escape which will not
-"                                become part of the pattern, then the \ character
-"                                is highlighted in green.
-"                            II. Pattern options (like 'i' for ignore-case) which
-"                                follow the final delimiter will be highlighted
-"                                in green.
-"                           III. Escape sequences with special meaning inside a
-"                                character class (such as \n or \s) are
-"                                highlighted in green.
+"           - php_asp_tags = 1
+"             ... for highlighting ASP-style short tags
 "
-"                     Yellow: The delimiter (currenly only /, !, or ~) should
-"                             be yellow across most platforms.  If a \ is used
-"                             to give the delimiter its literal meaning within
-"                             the pattern, then that \ will be yellow, but the
-"                             escaped delimiter will take on the color for
-"                             however it will be interpreted by the pattern
-"                             (i.e., either a regular escaped atom or part of
-"                             a character class.)
+"           - php_parent_error_close = 1
+"             ... for highlighting parent error ] or )
 "
-"                             Yellow is also used for a special sequence (such
-"                             as \r or \s) inside a *negative* character
-"                             class.
+"           - php_parent_error_open = 1
+"             ... for skipping an php end tag, if there exists an
+"                 open ( or [ without a closing one
 "
-"		                  Normal: regular atoms are not highlighted in any colour.
+"           - php_oldStyle = 1
+"             ... for using old colorstyle
 "
-"		                  Comments Color: When a special character (including the
-"		                                  delimiter) is escaped so it matches literally, it is
-"		                                  highlighted in the Comments colour.
+"           - php_noShortTags = 1
+"             ... don't sync <? ?> as php
 "
-"		                  PreProc Color: Is used for special characters (such as $
-"	               	                   or . ), quantifiers, parenthesis and
-"	               	                   surrounding character classes.  If -, ],
-"	               	                   ^, or \ is escaped inside a character
-"	               	                   class, then \ will also be highlighted in
-"	               	                   the PreProc color to indicate it is not
-"	               	                   part of the character class.
+"           - php_folding = 1/2
+"             ... 1: for folding classes and functions
+"                 2: for folding all { } regions
 "
-"	               	    Function Color: Is used for characters inside an
-"	               	                    inclusive character class.
+"           - php_sync_method = x
+"             ... x = -1 to sync by search (default)
+"                 x > 0  to sync at least x lines backwards
+"                 x = 0  to sync from start
 "
-"	               	    String Color: Is used for characters inside an exclusive
-"	               	                  character class.
 "
-"                 If you find that your colorscheme does not distinguish well
-"                 between elements of the pattern, or if you notice anything
-"                 missing, please do email me with a screenshot, the name of
-"                 the colorscheme you are using, etc, and I will do my best to
-"                 swap highlight linkings around so that they can work for
-"                 you.  On request, I can also send you a PHP file with about
-"                 70 sample patterns if you are interested in seeing the full
-"                 range of supported features.
+"    -- Added by Peter Hodge from June 9, 2006 --
 "
-"                 If you find the colors confusing (getting the right number
-"                 of \ characters can be tricky at first) please email me and
-"                 I will explain to you how they work.
+"	    Note: Most of these default to 1 (On), so you would need to set
+"	          them to 0 to turn them off. E.g., in your .vimrc file:
+"		      let php_special_variables = 0
+"		      let php_special_functions = 0
+"		      let php_alt_comparisons = 0
+"		      etc.
+"		  Unletting these variables will revert back to their default.
 "
-"                 I hope to make some more progress on this feature by next
-"                 Friday, all feedback is welcome: <toomuchphp-vim@yahoo.com>
 "
-"                 - Peter
+"           - php_special_variables = 1/0  [default 1]
+"             ... to highlight the built-in variables
+"               * always on if using php_oldStyle
+"
+"           - php_special_functions = 1/0  [default 1]
+"             ... to highlight functions with abnormal behaviour
+"                 e.g., unset(), extract()
+"
+"           - php_alt_comparisons = 1/0  [default 1]
+"             ... to highlight comparison operators in an alternate colour
+"               * always on if using php_oldStyle
+"
+"           - php_alt_assignByReference = 1/0  [default 1]
+"             ... to highlight '$foo = &$bar' in an alternate colour
+"
+"           - php_highlight_quotes = 1/0  [default 0]
+"             ... makes quote characters the same colour as the string
+"                 contents, like most other syntaxes.
+"
+"           - php_show_semicolon = 1/0  [default 1]
+"             ... to make the semicolon (;) more visible
+"
+"
+"    -- Perl-Compatible Regular Expression (PCRE) Syntax --
+"
+"           - php_show_preg = 1/0  [default 0]
+"             ... to highlight regular expression patterns inside calls
+"                 to preg_match(), preg_replace, etc.
+"
+"           Note: This feature is very functional now, if slightly irregular.
+"                 The highlighting WILL fail under the following conditions:
+"                   - If the pattern is not inside single-quotes
+"                   - If the single-quoted string is split into sections and
+"                     concatenated using the '.' operator
+"                   - A few of the features, such as '(?=' sub-expressions are
+"                     not finished yet.
+"                   - Some of the more tricky escape sequences will show up
+"                     like a 'TODO' item.  You can fix this by adding or
+"                     removing some backslashes.
+"                   - octal sequences are not yet implemented.
 "
 " ================================================================
-"
 "
 "
 " Note:
@@ -152,20 +126,47 @@
 "    ii) Same problem if you are setting php_folding = 2 with a closing
 "        } inside an string on the first line of this string.
 "
-"  - A double-quoted string like this:
-"      "$foo->someVar->someOtherVar->bar"
-"    will highight '->someOtherVar->bar' as though they will be parsed
-"    as object member variables, but PHP only recognizes the first
-"    object member variable ($foo->someVar).
+"   - A double-quoted string like this:
+"       "hello {$foo->someVar->someMethod()}, this is a string"
+"     will not highlight the () after someMethod.
+"
+"   - A double-quoted string like this:
+"       " hello, $myClass->$myVar "
+"     results in a parse error, however the highlighting does
+"     not show it as an error.
+"
+"   - A double-quoted string like this:
+"       " echo ${$var} "
+"     does not highlight the first '$' as an operator
+"
+"   - An object property by variable does not work:
+"     echo $foo->$bar;
+"
+" ================================================================
+"
+" TODO: PHP Syntax:
+"   - review support for PHP built-in globals:
+"     - ensure all PHP 5.1.4 globals are recognized
+"     - highlight known array keys for GLOBALS, _SERVER, _ENV, etc.
+"   - review support for PHP built-in constants, make sure I've got them all
+"   - review identifier substitution on double-quoted strings
+"
+" TODO: PCRE Syntax:
+"   - detect octal characters (e.g., \077)
+"   - correct highlighting for 'ambiguous' escape sequences
+"   - Add support for multi-part-concatenated single-quoted strings.
+"   - Add support for double-quoted strings.
+"   - Add support for all '(?>', '(?<=', etc, features.
+"   - Add support for paired delimiters <> () [] {}
 "
 "
-" TODO:
-"   - review support for PHP built-in globals.
-"     - recognize indexes for GLOBALS, _SERVER, _ENV, etc.
-"   - review support for PHP built-in constants.
-"   - move new 'hi link' commands to end of file with the others
-"   - change 'const' keyword to same colour as 'private/public' keywords
+" Future Plans:
+"   - detect errors in element positions: e.g.,
+"     Don't allow creating a class with the same name as a built-in
+"     class or interface, don't allow words like 'final' or 'private'
+"     anywhere except before a function or class definition, etc.
 "
+" ================================================================
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -211,6 +212,7 @@ if version < 600
 else
   syn include @sqlTop syntax/sql.vim
 endif
+
 syn sync clear
 unlet b:current_syntax
 syn cluster sqlTop remove=sqlString,sqlComment
@@ -222,6 +224,10 @@ if exists( "php_htmlInStrings")
   syn cluster phpAddStrings add=@htmlTop
 endif
 
+" special match will highlight any single character as an error
+" (used in a nextgroup option when the correct match does not follow)
+syntax match phpErrorNonMember /\c[^$a-z_{]/ contained
+
 syn case match
 
 " Env Variables
@@ -231,14 +237,114 @@ syn keyword	phpEnvVar	GATEWAY_INTERFACE SERVER_NAME SERVER_SOFTWARE SERVER_PROTO
 syn keyword	phpIntVar	GLOBALS PHP_ERRMSG PHP_SELF HTTP_GET_VARS HTTP_POST_VARS HTTP_COOKIE_VARS HTTP_POST_FILES HTTP_ENV_VARS HTTP_SERVER_VARS HTTP_SESSION_VARS HTTP_RAW_POST_DATA HTTP_STATE_VARS _GET _POST _COOKIE _FILES _SERVER _ENV _SERVER _REQUEST _SESSION	contained
 
 " Constants
-syn keyword	phpCoreConstant	PHP_VERSION PHP_OS DEFAULT_INCLUDE_PATH PEAR_INSTALL_DIR PEAR_EXTENSION_DIR PHP_EXTENSION_DIR PHP_BINDIR PHP_LIBDIR PHP_DATADIR PHP_SYSCONFDIR PHP_LOCALSTATEDIR PHP_CONFIG_FILE_PATH PHP_OUTPUT_HANDLER_START PHP_OUTPUT_HANDLER_CONT PHP_OUTPUT_HANDLER_END E_ERROR E_WARNING E_PARSE E_NOTICE E_CORE_ERROR E_CORE_WARNING E_COMPILE_ERROR E_COMPILE_WARNING E_USER_ERROR E_USER_WARNING E_USER_NOTICE E_ALL	contained
+" Peter Hodge, June 18, 2006
+" - this keyword list is way behind! Unfortunately, all I have
+"   access to at the moment is my home installation of 5.1.2, so I will add
+"   the ... er ... 626 ... constants harvested from get_defined_constants().
+syn keyword phpCoreConstant contained ASSERT_ACTIVE ASSERT_BAIL ASSERT_CALLBACK ASSERT_QUIET_EVAL ASSERT_WARNING
+syn keyword phpCoreConstant contained CAL_DOW_DAYNO CAL_DOW_LONG CAL_DOW_SHORT CAL_EASTER_ALWAYS_GREGORIAN CAL_EASTER_ALWAYS_JULIAN CAL_EASTER_DEFAULT CAL_EASTER_ROMAN CAL_FRENCH CAL_GREGORIAN CAL_JULIAN CAL_NUM_CALS CAL_JEWISH CAL_JEWISH_ADD_ALAFIM CAL_JEWISH_ADD_ALAFIM_GERESH CAL_JEWISH_ADD_GERESHAYIM CAL_MONTH_FRENCH CAL_MONTH_GREGORIAN_LONG CAL_MONTH_GREGORIAN_SHORT CAL_MONTH_JEWISH CAL_MONTH_JULIAN_LONG CAL_MONTH_JULIAN_SHORT
+syn keyword phpCoreConstant contained CASE_LOWER CASE_UPPER CHAR_MAX
+syn keyword phpCoreConstant contained CLSCTX_ALL CLSCTX_INPROC_HANDLER CLSCTX_INPROC_SERVER CLSCTX_LOCAL_SERVER CLSCTX_REMOTE_SERVER CLSCTX_SERVER
+syn keyword phpCoreConstant contained CONNECTION_ABORTED CONNECTION_NORMAL CONNECTION_TIMEOUT
+syn keyword phpCoreConstant contained COUNT_NORMAL COUNT_RECURSIVE
+syn keyword phpCoreConstant contained CP_ACP CP_MACCP CP_OEMCP CP_SYMBOL CP_THREAD_ACP CP_UTF7 CP_UTF8
+syn keyword phpCoreConstant contained CREDITS_ALL CREDITS_DOCS CREDITS_FULLPAGE CREDITS_GENERAL CREDITS_GROUP CREDITS_MODULES CREDITS_QA CREDITS_SAPI
+syn keyword phpCoreConstant contained CRYPT_BLOWFISH CRYPT_EXT_DES CRYPT_MD5 CRYPT_SALT_LENGTH CRYPT_STD_DES
+syn keyword phpCoreConstant contained DATE_ATOM DATE_COOKIE DATE_ISO8601 DATE_RFC1036 DATE_RFC1123 DATE_RFC2822 DATE_RFC822 DATE_RFC850 DATE_RSS DATE_W3C
+syn keyword phpCoreConstant contained DEFAULT_INCLUDE_PATH DIRECTORY_SEPARATOR
+syn keyword phpCoreConstant contained DISP_E_BADINDEX DISP_E_DIVBYZERO DISP_E_OVERFLOW
+syn keyword phpCoreConstant contained DOMSTRING_SIZE_ERR
+syn keyword phpCoreConstant contained DOM_HIERARCHY_REQUEST_ERR DOM_INDEX_SIZE_ERR DOM_INUSE_ATTRIBUTE_ERR DOM_INVALID_ACCESS_ERR DOM_INVALID_CHARACTER_ERR DOM_INVALID_MODIFICATION_ERR
+syn keyword phpCoreConstant contained DOM_INVALID_STATE_ERR DOM_NAMESPACE_ERR DOM_NOT_FOUND_ERR DOM_NOT_SUPPORTED_ERR DOM_NO_DATA_ALLOWED_ERR DOM_NO_MODIFICATION_ALLOWED_ERR DOM_PHP_ERR
+syn keyword phpCoreConstant contained DOM_SYNTAX_ERR DOM_VALIDATION_ERR DOM_WRONG_DOCUMENT_ERR
+syn keyword phpCoreConstant contained ENT_COMPAT ENT_NOQUOTES ENT_QUOTES
+syn keyword phpCoreConstant contained EXTR_IF_EXISTS EXTR_OVERWRITE EXTR_PREFIX_ALL EXTR_PREFIX_IF_EXISTS EXTR_PREFIX_INVALID EXTR_PREFIX_SAME EXTR_REFS EXTR_SKIP
+syn keyword phpCoreConstant contained E_ERROR E_WARNING E_PARSE E_NOTICE E_STRICT E_CORE_ERROR E_CORE_WARNING E_COMPILE_ERROR E_COMPILE_WARNING E_USER_ERROR E_USER_WARNING E_USER_NOTICE E_ALL
+syn keyword phpCoreConstant contained FILE_APPEND FILE_IGNORE_NEW_LINES FILE_NO_DEFAULT_CONTEXT FILE_SKIP_EMPTY_LINES FILE_USE_INCLUDE_PATH
+syn keyword phpCoreConstant contained FORCE_DEFLATE FORCE_GZIP
+syn keyword phpCoreConstant contained FTP_ASCII FTP_AUTORESUME FTP_AUTOSEEK FTP_BINARY FTP_FAILED FTP_FINISHED FTP_IMAGE FTP_MOREDATA FTP_TEXT FTP_TIMEOUT_SEC
+syn keyword phpCoreConstant contained GLOB_BRACE GLOB_ERR GLOB_MARK GLOB_NOCHECK GLOB_NOESCAPE GLOB_NOSORT GLOB_ONLYDIR
+syn keyword phpCoreConstant contained HTML_ENTITIES HTML_SPECIALCHARS
+syn keyword phpCoreConstant contained ICONV_IMPL ICONV_MIME_DECODE_CONTINUE_ON_ERROR ICONV_MIME_DECODE_STRICT ICONV_VERSION
+syn keyword phpCoreConstant contained IMAGETYPE_BMP IMAGETYPE_GIF IMAGETYPE_IFF IMAGETYPE_JB2 IMAGETYPE_JP2 IMAGETYPE_JPC IMAGETYPE_JPEG IMAGETYPE_JPEG2000
+syn keyword phpCoreConstant contained IMAGETYPE_JPX IMAGETYPE_PNG IMAGETYPE_PSD IMAGETYPE_SWC IMAGETYPE_SWF IMAGETYPE_TIFF_II IMAGETYPE_TIFF_MM IMAGETYPE_WBMP IMAGETYPE_XBM
+syn keyword phpCoreConstant contained INF
+syn keyword phpCoreConstant contained INFO_ALL INFO_CONFIGURATION INFO_CREDITS INFO_ENVIRONMENT INFO_GENERAL INFO_LICENSE INFO_MODULES INFO_VARIABLES
+syn keyword phpCoreConstant contained INI_ALL INI_PERDIR INI_SYSTEM INI_USER
+syn keyword phpCoreConstant contained LC_ALL LC_COLLATE LC_CTYPE LC_MONETARY LC_NUMERIC LC_TIME
+syn keyword phpCoreConstant contained LIBXML_COMPACT LIBXML_DOTTED_VERSION LIBXML_DTDATTR LIBXML_DTDLOAD LIBXML_DTDVALID LIBXML_ERR_ERROR LIBXML_ERR_FATAL LIBXML_ERR_NONE
+syn keyword phpCoreConstant contained LIBXML_ERR_WARNING LIBXML_NOBLANKS LIBXML_NOCDATA LIBXML_NOEMPTYTAG LIBXML_NOENT LIBXML_NOERROR LIBXML_NONET LIBXML_NOWARNING
+syn keyword phpCoreConstant contained LIBXML_NOXMLDECL LIBXML_NSCLEAN LIBXML_VERSION LIBXML_XINCLUDE
+syn keyword phpCoreConstant contained LOCK_EX LOCK_NB LOCK_SH LOCK_UN
+syn keyword phpCoreConstant contained LOG_ALERT LOG_AUTH LOG_AUTHPRIV LOG_CONS LOG_CRIT LOG_CRON LOG_DAEMON LOG_DEBUG
+syn keyword phpCoreConstant contained LOG_EMERG LOG_ERR LOG_INFO LOG_KERN LOG_LPR LOG_MAIL LOG_NDELAY LOG_NEWS
+syn keyword phpCoreConstant contained LOG_NOTICE LOG_NOWAIT LOG_ODELAY LOG_PERROR LOG_PID LOG_SYSLOG LOG_USER LOG_UUCP LOG_WARNING
+syn keyword phpCoreConstant contained MK_E_UNAVAILABLE
+syn keyword phpCoreConstant contained MYSQL_ASSOC MYSQL_BOTH MYSQL_CLIENT_COMPRESS MYSQL_CLIENT_IGNORE_SPACE MYSQL_CLIENT_INTERACTIVE MYSQL_CLIENT_SSL MYSQL_NUM
+syn keyword phpCoreConstant contained M_1_PI M_2_PI M_2_SQRTPI M_E M_LN10 M_LN2 M_LOG10E M_LOG2E M_PI M_PI_2 M_PI_4 M_SQRT1_2 M_SQRT2
+syn keyword phpCoreConstant contained NAN
+syn keyword phpCoreConstant contained NORM_IGNORECASE NORM_IGNOREKANATYPE NORM_IGNORENONSPACE NORM_IGNORESYMBOLS NORM_IGNOREWIDTH
+syn keyword phpCoreConstant contained ODBC_BINMODE_CONVERT ODBC_BINMODE_PASSTHRU ODBC_BINMODE_RETURN ODBC_TYPE
+syn keyword phpCoreConstant contained PATHINFO_BASENAME PATHINFO_DIRNAME PATHINFO_EXTENSION
+syn keyword phpCoreConstant contained PATH_SEPARATOR
+syn keyword phpCoreConstant contained PEAR_INSTALL_DIR PEAR_EXTENSION_DIR
+syn keyword phpCoreConstant contained PHP_PREFIX PHP_BINDIR PHP_CONFIG_FILE_PATH PHP_CONFIG_FILE_SCAN_DIR PHP_DATADIR PHP_EXTENSION_DIR PHP_LIBDIR PHP_LOCALSTATEDIR PHP_SYSCONFDIR PHP_SHLIB_SUFFIX
+syn keyword phpCoreConstant contained PHP_OUTPUT_HANDLER_CONT PHP_OUTPUT_HANDLER_END PHP_OUTPUT_HANDLER_START
+syn keyword phpCoreConstant contained PHP_URL_FRAGMENT PHP_URL_HOST PHP_URL_PASS PHP_URL_PATH PHP_URL_PORT PHP_URL_QUERY PHP_URL_SCHEME PHP_URL_USER
+syn keyword phpCoreConstant contained PHP_VERSION PHP_OS PHP_SAPI PHP_EOL PHP_INT_MAX PHP_INT_SIZE
+syn keyword phpCoreConstant contained PREG_GREP_INVERT PREG_OFFSET_CAPTURE PREG_PATTERN_ORDER PREG_SET_ORDER PREG_SPLIT_DELIM_CAPTURE PREG_SPLIT_NO_EMPTY PREG_SPLIT_OFFSET_CAPTURE
+syn keyword phpCoreConstant contained PSFS_ERR_FATAL PSFS_FEED_ME PSFS_FLAG_FLUSH_CLOSE PSFS_FLAG_FLUSH_INC PSFS_FLAG_NORMAL PSFS_PASS_ON
+syn keyword phpCoreConstant contained SEEK_CUR SEEK_END SEEK_SET
+syn keyword phpCoreConstant contained SORT_ASC SORT_DESC SORT_LOCALE_STRING SORT_NUMERIC SORT_REGULAR SORT_STRING
+syn keyword phpCoreConstant contained SQL_BIGINT SQL_BINARY SQL_BIT SQL_CHAR SQL_CONCURRENCY SQL_CONCUR_LOCK SQL_CONCUR_READ_ONLY SQL_CONCUR_ROWVER SQL_CONCUR_VALUES
+syn keyword phpCoreConstant contained SQL_CURSOR_DYNAMIC SQL_CURSOR_FORWARD_ONLY SQL_CURSOR_KEYSET_DRIVEN SQL_CURSOR_STATIC SQL_CURSOR_TYPE SQL_CUR_USE_DRIVER SQL_CUR_USE_IF_NEEDED SQL_CUR_USE_ODBC
+syn keyword phpCoreConstant contained SQL_DATE SQL_DECIMAL SQL_DOUBLE SQL_FETCH_FIRST SQL_FETCH_NEXT SQL_FLOAT SQL_INTEGER SQL_KEYSET_SIZE
+syn keyword phpCoreConstant contained SQL_LONGVARBINARY SQL_LONGVARCHAR SQL_NUMERIC SQL_ODBC_CURSORS SQL_REAL SQL_SMALLINT SQL_TIME SQL_TIMESTAMP SQL_TINYINT SQL_VARBINARY SQL_VARCHAR
+syn keyword phpCoreConstant contained STDERR STDIN STDOUT
+syn keyword phpCoreConstant contained STREAM_CLIENT_ASYNC_CONNECT STREAM_CLIENT_CONNECT STREAM_CLIENT_PERSISTENT
+syn keyword phpCoreConstant contained STREAM_CRYPTO_METHOD_SSLv23_CLIENT STREAM_CRYPTO_METHOD_SSLv23_SERVER STREAM_CRYPTO_METHOD_SSLv2_CLIENT STREAM_CRYPTO_METHOD_SSLv2_SERVER STREAM_CRYPTO_METHOD_SSLv3_CLIENT STREAM_CRYPTO_METHOD_SSLv3_SERVER STREAM_CRYPTO_METHOD_TLS_CLIENT STREAM_CRYPTO_METHOD_TLS_SERVER
+syn keyword phpCoreConstant contained STREAM_ENFORCE_SAFE_MODE STREAM_FILTER_ALL STREAM_FILTER_READ STREAM_FILTER_WRITE STREAM_IGNORE_URL
+syn keyword phpCoreConstant contained STREAM_IPPROTO_ICMP STREAM_IPPROTO_IP STREAM_IPPROTO_RAW STREAM_IPPROTO_TCP STREAM_IPPROTO_UDP STREAM_MKDIR_RECURSIVE STREAM_MUST_SEEK
+syn keyword phpCoreConstant contained STREAM_NOTIFY_AUTH_REQUIRED STREAM_NOTIFY_AUTH_RESULT STREAM_NOTIFY_COMPLETED STREAM_NOTIFY_CONNECT STREAM_NOTIFY_FAILURE STREAM_NOTIFY_FILE_SIZE_IS STREAM_NOTIFY_MIME_TYPE_IS
+syn keyword phpCoreConstant contained STREAM_NOTIFY_PROGRESS STREAM_NOTIFY_REDIRECTED STREAM_NOTIFY_RESOLVE STREAM_NOTIFY_SEVERITY_ERR STREAM_NOTIFY_SEVERITY_INFO STREAM_NOTIFY_SEVERITY_WARN
+syn keyword phpCoreConstant contained STREAM_OOB STREAM_PEEK STREAM_PF_INET STREAM_PF_INET6 STREAM_PF_UNIX STREAM_REPORT_ERRORS STREAM_SERVER_BIND STREAM_SERVER_LISTEN
+syn keyword phpCoreConstant contained STREAM_SOCK_DGRAM STREAM_SOCK_RAW STREAM_SOCK_RDM STREAM_SOCK_SEQPACKET STREAM_SOCK_STREAM STREAM_URL_STAT_LINK STREAM_URL_STAT_QUIET STREAM_USE_PATH
+syn keyword phpCoreConstant contained STR_PAD_BOTH STR_PAD_LEFT STR_PAD_RIGHT
+syn keyword phpCoreConstant contained SUNFUNCS_RET_DOUBLE SUNFUNCS_RET_STRING SUNFUNCS_RET_TIMESTAMP
+syn keyword phpCoreConstant contained T_ABSTRACT T_AND_EQUAL T_ARRAY T_ARRAY_CAST T_AS T_BAD_CHARACTER T_BOOLEAN_AND T_BOOLEAN_OR T_BOOL_CAST T_BREAK T_CASE T_CATCH
+syn keyword phpCoreConstant contained T_CHARACTER T_CLASS T_CLASS_C T_CLONE T_CLOSE_TAG T_COMMENT T_CONCAT_EQUAL T_CONST T_CONSTANT_ENCAPSED_STRING T_CONTINUE
+syn keyword phpCoreConstant contained T_CURLY_OPEN T_DEC T_DECLARE T_DEFAULT T_DIV_EQUAL T_DNUMBER T_DO T_DOC_COMMENT T_DOLLAR_OPEN_CURLY_BRACES T_DOUBLE_ARROW
+syn keyword phpCoreConstant contained T_DOUBLE_CAST T_DOUBLE_COLON T_ECHO T_ELSE T_ELSEIF T_EMPTY T_ENCAPSED_AND_WHITESPACE T_ENDDECLARE T_ENDFOR T_ENDFOREACH
+syn keyword phpCoreConstant contained T_ENDIF T_ENDSWITCH T_ENDWHILE T_END_HEREDOC T_EVAL T_EXIT T_EXTENDS T_FILE T_FINAL T_FOR T_FOREACH T_FUNCTION T_FUNC_C
+syn keyword phpCoreConstant contained T_GLOBAL T_HALT_COMPILER T_IF T_IMPLEMENTS T_INC T_INCLUDE T_INCLUDE_ONCE T_INLINE_HTML T_INSTANCEOF T_INTERFACE T_INT_CAST
+syn keyword phpCoreConstant contained T_ISSET T_IS_EQUAL T_IS_GREATER_OR_EQUAL T_IS_IDENTICAL T_IS_NOT_EQUAL T_IS_NOT_IDENTICAL T_IS_SMALLER_OR_EQUAL T_LINE T_LIST
+syn keyword phpCoreConstant contained T_LNUMBER T_LOGICAL_AND T_LOGICAL_OR T_LOGICAL_XOR T_METHOD_C T_MINUS_EQUAL T_MOD_EQUAL T_MUL_EQUAL T_NEW T_NUM_STRING T_OBJECT_CAST
+syn keyword phpCoreConstant contained T_OBJECT_OPERATOR T_OPEN_TAG T_OPEN_TAG_WITH_ECHO T_OR_EQUAL T_PAAMAYIM_NEKUDOTAYIM T_PLUS_EQUAL T_PRINT T_PRIVATE T_PROTECTED T_PUBLIC
+syn keyword phpCoreConstant contained T_REQUIRE T_REQUIRE_ONCE T_RETURN T_SL T_SL_EQUAL T_SR T_SR_EQUAL T_START_HEREDOC T_STATIC T_STRING T_STRING_CAST T_STRING_VARNAME
+syn keyword phpCoreConstant contained T_SWITCH T_THROW T_TRY T_UNSET T_UNSET_CAST T_USE T_VAR T_VARIABLE T_WHILE T_WHITESPACE T_XOR_EQUAL
+syn keyword phpCoreConstant contained UPLOAD_ERR_CANT_WRITE UPLOAD_ERR_FORM_SIZE UPLOAD_ERR_INI_SIZE UPLOAD_ERR_NO_FILE UPLOAD_ERR_NO_TMP_DIR UPLOAD_ERR_OK UPLOAD_ERR_PARTIAL
+syn keyword phpCoreConstant contained VARCMP_EQ VARCMP_GT VARCMP_LT VARCMP_NULL
+syn keyword phpCoreConstant contained VT_ARRAY VT_BOOL VT_BSTR VT_BYREF VT_CY VT_DATE VT_DECIMAL VT_DISPATCH VT_EMPTY VT_ERROR VT_I1 VT_I2 VT_I4 VT_INT VT_NULL VT_R4 VT_R8 VT_UI1 VT_UI2 VT_UI4 VT_UINT VT_UNKNOWN VT_VARIANT
+syn keyword phpCoreConstant contained XML_ATTRIBUTE_CDATA XML_ATTRIBUTE_DECL_NODE XML_ATTRIBUTE_ENTITY XML_ATTRIBUTE_ENUMERATION XML_ATTRIBUTE_ID XML_ATTRIBUTE_IDREF
+syn keyword phpCoreConstant contained XML_ATTRIBUTE_IDREFS XML_ATTRIBUTE_NMTOKEN XML_ATTRIBUTE_NMTOKENS XML_ATTRIBUTE_NODE XML_ATTRIBUTE_NOTATION XML_CDATA_SECTION_NODE
+syn keyword phpCoreConstant contained XML_COMMENT_NODE XML_DOCUMENT_FRAG_NODE XML_DOCUMENT_NODE XML_DOCUMENT_TYPE_NODE XML_DTD_NODE XML_ELEMENT_DECL_NODE XML_ELEMENT_NODE
+syn keyword phpCoreConstant contained XML_ENTITY_DECL_NODE XML_ENTITY_NODE XML_ENTITY_REF_NODE XML_ERROR_ASYNC_ENTITY XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF XML_ERROR_BAD_CHAR_REF
+syn keyword phpCoreConstant contained XML_ERROR_BINARY_ENTITY_REF XML_ERROR_DUPLICATE_ATTRIBUTE XML_ERROR_EXTERNAL_ENTITY_HANDLING XML_ERROR_INCORRECT_ENCODING XML_ERROR_INVALID_TOKEN
+syn keyword phpCoreConstant contained XML_ERROR_JUNK_AFTER_DOC_ELEMENT XML_ERROR_MISPLACED_XML_PI XML_ERROR_NONE XML_ERROR_NO_ELEMENTS XML_ERROR_NO_MEMORY XML_ERROR_PARAM_ENTITY_REF
+syn keyword phpCoreConstant contained XML_ERROR_PARTIAL_CHAR XML_ERROR_RECURSIVE_ENTITY_REF XML_ERROR_SYNTAX XML_ERROR_TAG_MISMATCH XML_ERROR_UNCLOSED_CDATA_SECTION
+syn keyword phpCoreConstant contained XML_ERROR_UNCLOSED_TOKEN XML_ERROR_UNDEFINED_ENTITY XML_ERROR_UNKNOWN_ENCODING XML_HTML_DOCUMENT_NODE XML_LOCAL_NAMESPACE
+syn keyword phpCoreConstant contained XML_NAMESPACE_DECL_NODE XML_NOTATION_NODE XML_OPTION_CASE_FOLDING XML_OPTION_SKIP_TAGSTART XML_OPTION_SKIP_WHITE XML_OPTION_TARGET_ENCODING
+syn keyword phpCoreConstant contained XML_PI_NODE XML_SAX_IMPL XML_TEXT_NODE
+syn keyword phpCoreConstant contained ZEND_THREAD_SAFE
 
-syn case ignore
-
-syn keyword	phpConstant	 __LINE__ __FILE__ __FUNCTION__ __METHOD__ __CLASS__	contained
+" Peter Hodge, June 17 2006
+" - changed this from 'phpConstant' to 'phpMagicConstant'
+"   to clarify its contents
+syn keyword	phpMagicConstant	 __LINE__ __FILE__ __FUNCTION__ __METHOD__ __CLASS__	contained
 
 
 " Function and Methods ripped from php_manual_de.tar.gz Jan 2003
+syn case ignore
 syn keyword	phpFunctions	apache_child_terminate apache_get_modules apache_get_version apache_getenv apache_lookup_uri apache_note apache_request_headers apache_response_headers apache_setenv ascii2ebcdic ebcdic2ascii getallheaders virtual	contained
 syn keyword	phpFunctions	array_change_key_case array_chunk array_combine array_count_values array_diff_assoc array_diff_uassoc array_diff array_fill array_filter array_flip array_intersect_assoc array_intersect array_key_exists array_keys array_map array_merge_recursive array_merge array_multisort array_pad array_pop array_push array_rand array_reduce array_reverse array_search array_shift array_slice array_splice array_sum array_udiff_assoc array_udiff_uassoc array_udiff array_unique array_unshift array_values array_walk array arsort asort compact count current each end extract in_array key krsort ksort list natcasesort natsort next pos prev range reset rsort shuffle sizeof sort uasort uksort usort	contained
 syn keyword	phpFunctions	aspell_check aspell_new aspell_suggest	contained
@@ -368,13 +474,16 @@ if exists( "php_baselib" )
 endif
 
 " Conditional
-syn keyword	phpConditional	declare else enddeclare endswitch elseif endif if switch	contained
+syn keyword phpConditional  contained declare enddeclare if else elseif endif switch endswitch
 
 " Repeat
-syn keyword	phpRepeat	as do endfor endforeach endwhile for foreach while	contained
+syn keyword phpRepeat       contained foreach as endforeach do while endwhile for endfor
 
-" Repeat
-syn keyword	phpLabel	case default switch	contained
+" Switch
+" Peter Hodge June 17 20067
+" - removed 'switch' from here to reserve phpLabel
+"   for code-flow entry points
+syn keyword	phpLabel	case default contained
 
 " Statement
 syn keyword	phpStatement	return break continue exit	contained
@@ -383,7 +492,9 @@ syn keyword	phpStatement	return break continue exit	contained
 syn keyword	phpKeyword	var const	contained
 
 " Type
-syn keyword	phpType	bool[ean] int[eger] real double float string array object NULL	contained
+" Peter Hodge - June 17, 2006
+" - changed bool[ean] to 'bool boolean' because boole doesn't work. Same for int[eger]
+syn keyword	phpType	bool boolean int integer real double float string array object null	contained
 
 " Structure
 syn keyword	phpStructure	extends implements instanceof parent self	contained
@@ -395,10 +506,25 @@ syn match	phpOperator	"/[^*/]"me=e-1	contained display
 syn match	phpOperator	"\$"	contained display
 syn match	phpOperator	"&&\|\<and\>"	contained display
 syn match	phpOperator	"||\|\<x\=or\>"	contained display
-syn match	phpRelation	"[!=<>]="	contained display
-syn match	phpRelation	"[<>]"	contained display
-syn match	phpMemberSelector	"->"	contained display
-syn match	phpVarSelector	"\$"	contained display
+" Peter Hodge - added support for array-building operator
+" to stop the relations from mixing this up
+syn match	phpOperator	/=>/	contained display
+
+" relations
+" Peter Hodge, June 17 2006
+" - altered relations to match strict comparisons (=== and !==)
+" - highlight the 'instanceof' operator as a relation operator
+"   rather than a structure, if comparison support is a priority.
+syn match	phpRelation	"[!=]==\="	contained display
+syn match	phpRelation	"[<>]=\="	contained display
+if ! exists('php_alt_comparisons') || php_alt_comparisons
+  syntax case ignore
+  syntax keyword phpRelation instanceof contained containedin=phpRegion
+endif
+
+
+syn match	phpMemberSelector /->/	contained display nextgroup=phpErrorNonMember
+syn match	phpVarSelector	/\$/	contained display
 
 " Identifier
 syn match	phpIdentifier	"$\h\w*"	contained contains=phpEnvVar,phpIntVar,phpVarSelector display
@@ -407,12 +533,19 @@ syn region	phpIdentifierComplex	matchgroup=phpParent start="{\$"rs=e-1 end="}"	c
 syn region	phpIdentifierComplexP	matchgroup=phpParent start="\[" end="]"	contains=@phpClInside	contained
 
 " Methoden
-syn match	phpMethodsVar	"->\h\w*"	contained contains=phpMethods,phpMemberSelector display
+syn match phpMethodsVar "->\h\w*" contained display contains=phpMethods,phpMemberSelector
+  \ containedin=phpStringDouble,phpHereDoc
+
+" Peter Hodge - June 25, 2006
+" - trying to fix support for things like
+"   $foo->$bar
+syn match phpMethodsVar /->\$\h\w*/ contained display contains=phpMemberSelector,phpIdentifier
+  \ containedin=phpStringDouble,phpHereDoc
 
 " Include
 syn keyword	phpInclude	include require include_once require_once	contained
 
-" Peter Hodge - added 'clone' keyword
+" Peter Hodge - added 'clone' keyword here
 " Define
 syn keyword	phpDefine	new clone	contained
 
@@ -463,23 +596,23 @@ endif
 
 " String
 if exists("php_parent_error_open")
-  syn region	phpStringDouble	matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex	contained keepend
-  syn region	phpBacktick	matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\"+ end=+`+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex	contained keepend
+  syn region	phpStringDouble	matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex	contained keepend
+  syn region	phpBacktick	matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\`+ end=+`+	contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex	contained keepend
   syn region	phpStringSingle	matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings contained keepend
 else
-  syn region	phpStringDouble	matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
-  syn region	phpBacktick	matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\"+ end=+`+	contains=@phpAddStrings,phpIdentifier,phpSpecialChar,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
+  syn region	phpStringDouble	matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
+  syn region	phpBacktick	matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\`+ end=+`+	contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
   syn region	phpStringSingle	matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings contained keepend extend
 endif
 
 " HereDoc
 if version >= 600
   syn case match
-  syn region	phpHereDoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\I\i*\)$" end="^\z1\(;\=$\)\@="	contained contains=phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+  syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\)\@<=\z(\I\i*\)$" end="^\z1\(;\=$\)\@="	contained contains=phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
 " including HTML,JavaScript,SQL even if not enabled via options
-  syn region	phpHereDoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(html\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlTop,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
-  syn region	phpHereDoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(sql\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@sqlTop,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
-  syn region	phpHereDoc	matchgroup=Delimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(javascript\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlJavascript,phpIdentifierSimply,phpIdentifier,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+  syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(html\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlTop,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+  syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(sql\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@sqlTop,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+  syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(javascript\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlJavascript,phpIdentifierSimply,phpIdentifier,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
   syn case ignore
 endif
 
@@ -495,7 +628,7 @@ else
   syn match phpParent	"[({[\]})]"	contained
 endif
 
-syn cluster	phpClConst	contains=phpFunctions,phpIdentifier,phpConditional,phpRepeat,phpStatement,phpOperator,phpRelation,phpStringSingle,phpStringDouble,phpBacktick,phpNumber,phpFloat,phpKeyword,phpType,phpBoolean,phpStructure,phpMethodsVar,phpConstant,phpCoreConstant,phpException
+syn cluster	phpClConst	contains=phpFunctions,phpIdentifier,phpConditional,phpRepeat,phpStatement,phpOperator,phpRelation,phpStringSingle,phpStringDouble,phpBacktick,phpNumber,phpFloat,phpKeyword,phpType,phpBoolean,phpStructure,phpMethodsVar,phpMagicConstant,phpCoreConstant,phpException
 syn cluster	phpClInside	contains=@phpClConst,phpComment,phpLabel,phpParent,phpParentError,phpInclude,phpHereDoc
 syn cluster	phpClFunction	contains=@phpClInside,phpDefine,phpParentError,phpStorageClass
 syn cluster	phpClTop	contains=@phpClFunction,phpFoldFunction,phpFoldClass,phpFoldInterface,phpFoldTry,phpFoldCatch
@@ -503,23 +636,23 @@ syn cluster	phpClTop	contains=@phpClFunction,phpFoldFunction,phpFoldClass,phpFol
 " Php Region
 if exists("php_parent_error_open")
   if exists("php_noShortTags")
-    syn region	 phpRegion	matchgroup=Delimiter start="<?php" end="?>"	contains=@phpClTop
+    syn region	 phpRegion	matchgroup=phpRegionDelimiter start="<?php" end="?>"	contains=@phpClTop
   else
-    syn region	 phpRegion	matchgroup=Delimiter start="<?\(php\)\=" end="?>"	contains=@phpClTop
+    syn region	 phpRegion	matchgroup=phpRegionDelimiter start="<?\(php\)\=" end="?>"	contains=@phpClTop
   endif
-  syn region	 phpRegionSc	matchgroup=Delimiter start=+<script language="php">+ end=+</script>+	contains=@phpClTop
+  syn region	 phpRegionSc	matchgroup=phpRegionDelimiter start=+<script language="php">+ end=+</script>+	contains=@phpClTop
   if exists("php_asp_tags")
-    syn region	 phpRegionAsp	matchgroup=Delimiter start="<%\(=\)\=" end="%>"	contains=@phpClTop
+    syn region	 phpRegionAsp	matchgroup=phpRegionDelimiter start="<%\(=\)\=" end="%>"	contains=@phpClTop
   endif
 else
   if exists("php_noShortTags")
-    syn region	 phpRegion	matchgroup=Delimiter start="<?php" end="?>"	contains=@phpClTop keepend
+    syn region	 phpRegion	matchgroup=phpRegionDelimiter start="<?php" end="?>"	contains=@phpClTop keepend
   else
-    syn region	 phpRegion	matchgroup=Delimiter start="<?\(php\)\=" end="?>"	contains=@phpClTop keepend
+    syn region	 phpRegion	matchgroup=phpRegionDelimiter start="<?\(php\)\=" end="?>"	contains=@phpClTop keepend
   endif
-  syn region	 phpRegionSc	matchgroup=Delimiter start=+<script language="php">+ end=+</script>+	contains=@phpClTop keepend
+  syn region	 phpRegionSc	matchgroup=phpRegionDelimiter start=+<script language="php">+ end=+</script>+	contains=@phpClTop keepend
   if exists("php_asp_tags")
-    syn region	 phpRegionAsp	matchgroup=Delimiter start="<%\(=\)\=" end="%>"	contains=@phpClTop keepend
+    syn region	 phpRegionAsp	matchgroup=phpRegionDelimiter start="<%\(=\)\=" end="%>"	contains=@phpClTop keepend
   endif
 endif
 
@@ -536,7 +669,7 @@ if exists("php_folding") && php_folding==1
   syn match	phpException	"\(\s\|^\)catch\(\s\+.*}\)\@="	contained
 
   set foldmethod=syntax
-  syn region	phpFoldHtmlInside	matchgroup=Delimiter start="?>" end="<?\(php\)\=" contained transparent contains=@htmlTop
+  syn region	phpFoldHtmlInside	matchgroup=phpRegionDelimiter start="?>" end="<?\(php\)\=" contained transparent contains=@htmlTop
   syn region	phpFoldFunction	matchgroup=Storageclass start="^\z(\s*\)\(abstract\s\+\|final\s\+\|private\s\+\|protected\s\+\|public\s\+\|static\s\+\)*function\s\([^};]*$\)\@="rs=e-9 matchgroup=Delimiter end="^\z1}" contains=@phpClFunction,phpFoldHtmlInside,phpFCKeyword contained transparent fold extend
   syn region	phpFoldFunction	matchgroup=Define start="^function\s\([^};]*$\)\@=" matchgroup=Delimiter end="^}" contains=@phpClFunction,phpFoldHtmlInside contained transparent fold extend
   syn region	phpFoldClass	matchgroup=Structure start="^\z(\s*\)\(abstract\s\+\|final\s\+\)*class\s\+\([^}]*$\)\@=" matchgroup=Delimiter end="^\z1}" contains=@phpClFunction,phpFoldFunction,phpSCKeyword contained transparent fold extend
@@ -550,7 +683,7 @@ elseif exists("php_folding") && php_folding==2
   syn keyword	phpStorageClass	final global private protected public static	contained
 
   set foldmethod=syntax
-  syn region	phpFoldHtmlInside	matchgroup=Delimiter start="?>" end="<?\(php\)\=" contained transparent contains=@htmlTop
+  syn region	phpFoldHtmlInside	matchgroup=phpRegionDelimiter start="?>" end="<?\(php\)\=" contained transparent contains=@htmlTop
   syn region	phpParent	matchgroup=Delimiter start="{" end="}"	contained contains=@phpClFunction,phpFoldHtmlInside transparent fold
 else
   syn keyword	phpDefine	function	contained
@@ -565,74 +698,66 @@ endif
 " critical, but they make things more colourful. :-)
 
 " corrected highlighting for an escaped '\$' inside a double-quoted string
-syn match phpSpecialChar	"\\\$"	contained display
+syn match phpSpecialChar /\\\$/ contained display
 
-" highlight object variables inside strings
-syn match	phpMethodsVar	"->\h\w*"	contained contains=phpMethods,phpMemberSelector display containedin=phpStringDouble
+" Peter Hodge - June 17 2006:
+" - match \" as a specialchar inside a double-quoted string,
+" - OR, match \' inside a single-quoted string
+syntax match phpStringSpecialChar /\\"/ contained containedin=phpStringDouble display
+syntax match phpStringSpecialChar /\\'/ contained containedin=phpStringSingle display
+hi link phpStringSpecialChar phpSpecialChar
 
-" highlight constant E_STRICT
-syntax case match
-syntax keyword phpCoreConstant E_STRICT contained
-syntax case ignore
+" highlight variables inside double-quoted strings
+"syn match phpStringIdentifier /\c\$\h\w*\(->\h\w*\|->[^ \t\r\n"a-z_]\)\=/ contained display
+"  \ containedin=phpStringDouble,phpHereDoc
+"  \ contains=phpIdentifier,phpMemberSelector
+syn match phpMethodsVar "->\h\w*" contained contains=phpMethods,phpMemberSelector display containedin=phpStringDouble
 
 " different syntax highlighting for 'echo', 'print', 'switch', 'die' and 'list' keywords
 " to better indicate what they are.
 syntax keyword phpDefine echo print contained
-syntax keyword phpStructure list contained
-syntax keyword phpConditional switch contained
+syntax keyword phpType list contained
 syntax keyword phpStatement die contained
 
 " Highlighting for PHP5's user-definable magic class methods
-syntax keyword phpSpecialFunction containedin=ALLBUT,phpComment,phpStringDouble,phpStringSingle,phpIdentifier
-  \ __construct __destruct __call __toString __sleep __wakeup __set __get __unset __isset __clone __set_state
+syntax keyword phpSpecialFunction contained containedin=@phpClFunction,phpMethodsVar,phpRegion
+	\ __construct __destruct __call __toString __sleep __wakeup __set __get __unset __isset __clone __set_state
 " Highlighting for __autoload slightly different from line above
-syntax keyword phpSpecialFunction containedin=ALLBUT,phpComment,phpStringDouble,phpStringSingle,phpIdentifier,phpMethodsVar
-  \ __autoload
-highlight link phpSpecialFunction phpOperator
+syntax keyword phpSpecialFunction contained containedin=@phpClFunction,phpRegion
+	\ __autoload
 
 " Highlighting for PHP5's built-in classes
 " - built-in classes harvested from get_declared_classes() in 5.1.4
-syntax keyword phpClasses containedin=ALLBUT,phpComment,phpStringDouble,phpStringSingle,phpIdentifier,phpMethodsVar
-  \ stdClass __PHP_Incomplete_Class php_user_filter Directory ArrayObject
-  \ Exception ErrorException LogicException BadFunctionCallException BadMethodCallException DomainException
-  \ RecursiveIteratorIterator IteratorIterator FilterIterator RecursiveFilterIterator ParentIterator LimitIterator
-  \ CachingIterator RecursiveCachingIterator NoRewindIterator AppendIterator InfiniteIterator EmptyIterator
-  \ ArrayIterator RecursiveArrayIterator DirectoryIterator RecursiveDirectoryIterator
-  \ InvalidArgumentException LengthException OutOfRangeException RuntimeException OutOfBoundsException
-  \ OverflowException RangeException UnderflowException UnexpectedValueException
-  \ PDO PDOException PDOStatement PDORow
-  \ Reflection ReflectionFunction ReflectionParameter ReflectionMethod ReflectionClass
-  \ ReflectionObject ReflectionProperty ReflectionExtension ReflectionException
-  \ SplFileInfo SplFileObject SplTempFileObject SplObjectStorage
-  \ XMLWriter LibXMLError XMLReader SimpleXMLElement SimpleXMLIterator
-  \ DOMException DOMStringList DOMNameList DOMDomError DOMErrorHandler
-  \ DOMImplementation DOMImplementationList DOMImplementationSource
-  \ DOMNode DOMNameSpaceNode DOMDocumentFragment DOMDocument DOMNodeList DOMNamedNodeMap
-  \ DOMCharacterData DOMAttr DOMElement DOMText DOMComment DOMTypeinfo DOMUserDataHandler
-  \ DOMLocator DOMConfiguration DOMCdataSection DOMDocumentType DOMNotation DOMEntity
-  \ DOMEntityReference DOMProcessingInstruction DOMStringExtend DOMXPath
-highlight link phpClasses phpFunctions
+syntax keyword phpClasses contained containedin=phpRegion
+	\ stdClass __PHP_Incomplete_Class php_user_filter Directory ArrayObject
+	\ Exception ErrorException LogicException BadFunctionCallException BadMethodCallException DomainException
+	\ RecursiveIteratorIterator IteratorIterator FilterIterator RecursiveFilterIterator ParentIterator LimitIterator
+	\ CachingIterator RecursiveCachingIterator NoRewindIterator AppendIterator InfiniteIterator EmptyIterator
+	\ ArrayIterator RecursiveArrayIterator DirectoryIterator RecursiveDirectoryIterator
+	\ InvalidArgumentException LengthException OutOfRangeException RuntimeException OutOfBoundsException
+	\ OverflowException RangeException UnderflowException UnexpectedValueException
+	\ PDO PDOException PDOStatement PDORow
+	\ Reflection ReflectionFunction ReflectionParameter ReflectionMethod ReflectionClass
+	\ ReflectionObject ReflectionProperty ReflectionExtension ReflectionException
+	\ SplFileInfo SplFileObject SplTempFileObject SplObjectStorage
+	\ XMLWriter LibXMLError XMLReader SimpleXMLElement SimpleXMLIterator
+	\ DOMException DOMStringList DOMNameList DOMDomError DOMErrorHandler
+	\ DOMImplementation DOMImplementationList DOMImplementationSource
+	\ DOMNode DOMNameSpaceNode DOMDocumentFragment DOMDocument DOMNodeList DOMNamedNodeMap
+	\ DOMCharacterData DOMAttr DOMElement DOMText DOMComment DOMTypeinfo DOMUserDataHandler
+	\ DOMLocator DOMConfiguration DOMCdataSection DOMDocumentType DOMNotation DOMEntity
+	\ DOMEntityReference DOMProcessingInstruction DOMStringExtend DOMXPath
 
 " Highlighting for PHP5's built-in interfaces
 " - built-in classes harvested from get_declared_interfaces() in 5.1.4
-syntax keyword phpInterfaces containedin=ALLBUT,phpComment,phpStringDouble,phpStringSingle,phpIdentifier,phpMethodsVar
-  \ Iterator IteratorAggregate RecursiveIterator OuterIterator SeekableIterator
-  \ Traversable ArrayAccess Serializable Countable SplObserver SplSubject Reflector
-highlight link phpInterfaces phpConstant
+syntax keyword phpInterfaces contained containedin=phpRegion
+	\ Iterator IteratorAggregate RecursiveIterator OuterIterator SeekableIterator
+	\ Traversable ArrayAccess Serializable Countable SplObserver SplSubject Reflector
 "
 " add php_errormsg as a special variable
 syn keyword	phpIntVar	contained php_errormsg
 
 " option defaults:
-if ! exists('php_special_variables')
-    let php_special_variables = 1
-endif
-if ! exists('php_special_functions')
-    let php_special_functions = 1
-endif
-if ! exists('php_alt_comparisons')
-    let php_alt_comparisons = 1
-endif
 if ! exists('php_alt_assignByReference')
     let php_alt_assignByReference = 1
 endif
@@ -642,52 +767,29 @@ endif
 
 if php_show_semicolon
   " highlight the semicolon same colour as 'echo'
-  syntax match phpSemicolon /;/ contained containedin=phpRegion
-  hi def link phpSemicolon phpDefine
+  syntax match phpSemicolon /;/ contained containedin=phpRegion display
 endif
 
-if php_special_variables
-  hi link phpIntVar phpOperator
-  hi link phpEnvVar phpOperator
-else
-  hi link phpIntVar phpIdentifier
-  hi link phpEnvVar phpIdentifier
-endif
-
-if php_special_functions
-    " Highlighting for PHP built-in functions which exhibit special behaviours
-    " - isset()/unset()/empty() are not real functions.
-    " - compact()/extract() directly manipulate variables in the local scope where
-    "   regular functions would not be able to.
-    " - eval() is the token 'make_your_code_twice_as_complex()' function for PHP.
-    " - user_error()/trigger_error() can be overloaded by set_error_handler and also
-    "   have the capacity to terminate your script when type is E_USER_ERROR.
-    syntax keyword phpSpecialFunction containedin=ALLBUT,phpComment,phpStringDouble,phpStringSingle,phpIdentifier
-	\ user_error trigger_error isset unset eval extract compact empty
+if ! exists('php_special_functions') || php_special_functions
+        " Highlighting for PHP built-in functions which exhibit special behaviours
+        " - isset()/unset()/empty() are not real functions.
+        " - compact()/extract() directly manipulate variables in the local scope where
+        "   regular functions would not be able to.
+        " - eval() is the token 'make_your_code_twice_as_complex()' function for PHP.
+        " - user_error()/trigger_error() can be overloaded by set_error_handler and also
+        "   have the capacity to terminate your script when type is E_USER_ERROR.
+        syntax keyword phpSpecialFunction contained containedin=phpRegion
+                \ user_error trigger_error isset unset eval extract compact empty
 endif
 
 if php_alt_assignByReference
     " special highlighting for '=&' operator
-    syntax match phpAssignByRef /=\s*&/ containedin=ALLBUT,phpComment,phpStringDouble,phpStringSingle
-    highlight link phpAssignByRef Type
-endif
-
-if php_alt_comparisons
-	" highlight comparison operators differently
-	syntax match phpComparison "\v[=!]\=\=?" contained containedin=phpRegion
-	syntax match phpComparison "\v[=<>-]@<![<>]\=?[<>]@!" contained containedin=phpRegion
-
-	" highlight the 'instanceof' operator as a comparison operator rather than a structure
-	syntax case ignore
-	syntax keyword phpComparison instanceof contained containedin=phpRegion
-
-	hi link phpComparison Statement
+    syntax match phpAssignByRef /=\s*&/ contained containedin=ALLBUT,phpComment,phpStringDouble,phpStringSingle display
 endif
 
 " highlighting for the '@' error-supressing operator
 syntax match phpSupressErrors /@/ contained display
 syntax cluster phpClConst add=phpSupressErrors
-highlight link phpSupressErrors phpDefine
 
 " ================================================================
 
@@ -720,86 +822,148 @@ if version >= 508 || !exists("did_php_syn_inits")
     let did_php_syn_inits = 1
     command -nargs=+ HiLink hi link <args>
   else
-    command -nargs=+ HiLink hi def link <args>
+    "command -nargs=+ HiLink hi def link <args>
+    command -nargs=+ HiLink hi link <args>
   endif
 
-  HiLink	 phpConstant	Constant
-  HiLink	 phpCoreConstant	Constant
-  HiLink	 phpComment	Comment
-  HiLink	 phpException	Exception
-  HiLink	 phpBoolean	Boolean
-  HiLink	 phpStorageClass	StorageClass
-  HiLink	 phpSCKeyword	StorageClass
-  HiLink	 phpFCKeyword	Define
-  HiLink	 phpStructure	Structure
+  " Peter Hodge, June 17 2006
+  " - I'm optimizing these highlight links for the default
+  "   colorscheme, or 'elflord' when it would make a major
+  "   difference.
+  "   After most HiLinks I have noted which color the group
+  "   will revert back to under default or elflord.
 
-  HiLink	 phpStringSingle	String
-  HiLink	 phpStringDouble	String
-  HiLink	 phpBacktick	String
+  if exists('g:colors_name') && g:colors_name == 'elflord'
+    let s:is_elflord = 1
+  else
+    let s:is_elflord = 0
+  endif
 
-  " ================================================================
+  if exists("php_oldStyle")
+    hi	phpOperator guifg=SeaGreen ctermfg=DarkGreen
+    hi	phpIdentifier guifg=DarkGray ctermfg=Brown
+    hi	phpIdentifierSimply guifg=DarkGray ctermfg=Brown
+    hi	phpVarSelector guifg=SeaGreen ctermfg=DarkGreen
+
+    hi	phpRelation guifg=SeaGreen ctermfg=DarkGreen
+
+    hi	phpIntVar guifg=Red ctermfg=DarkRed
+    hi	phpEnvVar guifg=Red ctermfg=DarkRed
+  else
+    HiLink phpOperator          Operator    " => Statement(Yellow) / Operator(Red)
+    HiLink phpIdentifier        Identifier  " => Identifier(Cyan)
+    HiLink phpIdentifierSimply	phpIdentifier
+    HiLink phpVarSelector       Operator         " => Statement (yellow)
+
+	if ! exists('php_alt_comparisons') || php_alt_comparisons
+		"ARRRR!!!  'Special' would work well under default, but
+		" elflord needs something like 'Statement'.  I will just have
+		" to go with Constant, that's the best which will work under
+		" default AND elflord.
+		if s:is_elflord
+			HiLink phpRelation	Statement " => Yellow
+		else
+			HiLink phpRelation	Constant  " => Constant (SlateBlue)
+		endif
+	else
+		HiLink phpRelation     phpOperator
+	endif
+
+    " special variables support:
+    if ! exists('php_special_variables') || php_special_variables
+      HiLink phpIntVar      Tag         " => Special (orange/red)
+      HiLink phpEnvVar      Tag         " => Special (ornage/red)
+    else
+      HiLink phpIntVar      phpIdentifier
+      HiLink phpEnvVar      phpIdentifier
+    endif
+  endif
+
+  " language:
+  HiLink phpComment       Comment       " Slateblue
+
+  HiLink phpSemicolon     Macro         " => PreProc (LightMagenta)
+  HiLink phpDefine        Define        " => PreProc (LightMagenta)
+  HiLink phpInclude       Include       " => PreProc (LightMagenta)
+
+  HiLink phpParent        Delimiter     " => Special (Red)
+
+  HiLink phpType          Type          " Green
+
+  " other operations
+  HiLink phpSupressErrors   PreProc   " LightMagenta
+  HiLink phpAssignByRef     Type      " Green
+  HiLink phpMemberSelector	Structure " => Type (Green)
+
+  " execution control structures
+  HiLink phpConditional   Conditional   " => Statement (Yellow) / Repeat (White)
+  HiLink phpRepeat        Repeat        " => Statement (Yellow) / Repeat (White)
+  HiLink phpStatement     Statement     " (Yellow / Brown)
+  HiLink phpLabel         Label         " => Statement (Yellow / Brown)
+  HiLink phpException     Exception     " => Statement (Yellow)
+
+  " constants
+  HiLink phpMagicConstant Constant      " Pink / Magenta
+  HiLink phpCoreConstant  Constant      " Pink / Magenta
+  HiLink phpNumber      	Number        " => Constant (Pink)
+  HiLink phpFloat         Float         " => Constant (Pink)
+  HiLink phpBoolean       phpType
+  HiLink phpStringSingle	String        " => Constant (Pink)
+  HiLink phpStringDouble	String        " => Constant (Pink)
+  HiLink phpBacktick      String        " => Constant (Pink)
+  HiLink phpSpecialChar   SpecialChar   " => Special (Orange / Red)
+
+  " keywords (mainly class / function definitions)
+  HiLink phpStorageClass  StorageClass  " => Type (Green)
+  HiLink phpSCKeyword     phpStorageClass
+  HiLink phpStructure     Structure     " => Type (Green)
+  HiLink phpFCKeyword     phpDefine
+  HiLink phpKeyword       phpDefine
+
   " Peter Hodge - June 13, 2006
   " - under some colourschemes, it is less clear to have the quote
   "   characters highlighted like the strings (which is probably why
   "   the matchgroup was deliberately set to 'None'.)  You can
   "   highlight the quote characters also by turning on the following
   "   option.
-
-  " TODO: mention this at top of file
-  if ! exists('php_highlight_quotes')
-    " default OFF
-    let php_highlight_quotes = 0
-  endif
-
-  if php_highlight_quotes
-    HiLink   phpQuoteSingle String
-    HiLink   phpQuoteDouble String
-    HiLink   phpQuoteBacktick Operator
+  if exists('php_highlight_quotes')
+    let s:hiQuotes = php_highlight_quotes
+  elseif exists('colors_name') && colors_name == 'php'
+    let s:hiQuotes = 1
   else
-    HiLink   phpQuoteSingle None
-    HiLink   phpQuoteDouble None
-    HiLink   phpQuoteBacktick None
+    let s:hiQuotes = 0
   endif
 
-  " ================================================================
-
-  HiLink	 phpNumber	Number
-  HiLink	 phpFloat	Float
-  HiLink	 phpMethods	Function
-  HiLink	 phpFunctions	Function
-  HiLink	 phpBaselib	Function
-  HiLink	 phpRepeat	Repeat
-  HiLink	 phpConditional	Conditional
-  HiLink	 phpLabel	Label
-  HiLink	 phpStatement	Statement
-  HiLink	 phpKeyword	Statement
-  HiLink	 phpType	Type
-  HiLink	 phpInclude	Include
-  HiLink	 phpDefine	Define
-  HiLink	 phpSpecialChar	SpecialChar
-  HiLink	 phpParent	Delimiter
-  HiLink	 phpIdentifierConst	Delimiter
-  HiLink	 phpParentError	Error
-  HiLink	 phpOctalError	Error
-  HiLink	 phpTodo	Todo
-  HiLink	 phpMemberSelector	Structure
-  if exists("php_oldStyle")
-	hi	phpIntVar guifg=Red ctermfg=DarkRed
-	hi	phpEnvVar guifg=Red ctermfg=DarkRed
-	hi	phpOperator guifg=SeaGreen ctermfg=DarkGreen
-	hi	phpVarSelector guifg=SeaGreen ctermfg=DarkGreen
-	hi	phpRelation guifg=SeaGreen ctermfg=DarkGreen
-	hi	phpIdentifier guifg=DarkGray ctermfg=Brown
-	hi	phpIdentifierSimply guifg=DarkGray ctermfg=Brown
+  if s:hiQuotes
+    HiLink phpQuoteSingle   phpStringSingle
+    HiLink phpQuoteDouble   phpStringDouble
+    HiLink phpQuoteBacktick phpOperator
   else
-	HiLink	phpIntVar	Identifier
-	HiLink	phpEnvVar	Identifier
-	HiLink	phpOperator	Operator
-	HiLink	phpVarSelector	Operator
-	HiLink	phpRelation	Operator
-	HiLink	phpIdentifier	Identifier
-	HiLink	phpIdentifierSimply	Identifier
+    HiLink phpQuoteSingle   Normal
+    HiLink phpQuoteDouble   Normal
+    HiLink phpQuoteBacktick Normal
   endif
+  unlet s:hiQuotes
+
+  " built-in langauge functions / classes
+  HiLink phpFunctions       Function        " => Identifier (Cyan) / Function (White)
+  HiLink phpClasses         phpFunctions
+  HiLink phpMethods         phpFunctions
+  HiLink phpInterfaces      phpCoreConstant
+  HiLink phpSpecialFunction SpecialComment  " => Special (Orange / Red)
+
+  " other items
+  HiLink phpParentError     Error
+  HiLink phpOctalError      Error
+  HiLink phpTodo            Todo
+  HiLink phpErrorNonMember  Error
+
+  " Peter Hodge June 17, 2006:
+  " changed matchgroup for phpRegion from Delimiter to phpRegionDelimiter
+  HiLink phpRegionDelimiter   Debug               " => Special (Orange / Red)
+
+  " changed matchgroup for phpHereDoc to phpHereDocDelimiter
+  HiLink phpHereDocDelimiter  phpRegionDelimiter  " => Special (Orange / Red)
 
   delcommand HiLink
 endif
@@ -808,8 +972,372 @@ endif
 " Added by Peter Hodge, June 16, 2006
 " - optional support for PCRE extension (preg_* functions)
 
-if exists('php_show_preg') && php_show_preg
-  runtime syntax/php_preg.vim
+if ! exists('g:php_show_preg') || g:php_show_preg
+  function! s:PHPPregSyntax()
+    " ===================================================
+    " Note: I have deliberately neglected to support the '\cx' functionality
+    "       - it would do more harm than good by complicating this already-
+    "       mind-numbing syntax file when nobody really needs this feature in
+    "       PHP.
+
+    " ===================================================
+    function! s:FindPregEscape()
+      " look for any escape sequence inside the pattern and mark them as errors
+      " by default, all escape sequences are errors
+      syntax match pregEscapeUnknown /\\./ contained containedin=@pregString_any display
+
+      syntax cluster pregClass_any add=@pregClassInc_any,@pregClassExc_any
+      syntax cluster pregClassRange_any add=pregClassIncRange,pregClassExcRange
+
+      syntax match pregClassEscapeUnknown /\\[^\^\-\]]/ contained containedin=@pregClass_any display
+      "syntax match pregClassEscape /\\[\^\-\]]/he=s+1 contained containedin=@pregClass_any display
+      syntax match pregClassEscape /\\[^a-zA-Z0-9]/he=s+1 contained containedin=@pregClass_any display
+
+      syntax match pregClassIncEscapeKnown /\C\\[abtnfretdswDSW]/ contained display
+        \ containedin=@pregClassInc_any,pregClassIncRange
+      syntax match pregClassExcEscapeKnown /\C\\[abtnfretdswDSW]/ contained display
+        \ containedin=@pregClassExc_any,pregClassExcRange
+      " ... and also for hex characters
+      syntax match pregClassIncEscapeKnown /\C\\x\x\{0,2}/ contained display
+        \ containedin=@pregClassInc_any,pregClassIncRange
+      syntax match pregClassExcEscapeKnown /\C\\x\x\{0,2}/ contained display
+        \ containedin=@pregClassExc_any,pregClassExcRange
+
+      syntax match pregClassEscapeSingleQuote /\\'/ contained transparent display
+        \ containedin=@pregClass_any,@pregClassRange_any
+        \ contains=pregEscapePHP 
+      syntax match pregClassEscapeSingleQuoteAmbiguous /\\\\\\'/ contained display
+        \ containedin=@pregClass_any
+      hi link pregClassEscapeSingleQuoteAmbiguous pregEscapeAmbiguous
+
+      syntax match pregClassEscapeDouble1 /\v\\\\(\\\\)@=/ contained containedin=@pregClass_any display
+        \ contains=pregEscapePHP
+        \ nextgroup=pregClassEscapeDouble2
+      syntax match pregClassEscapeDouble2 /\\\\/ contained transparent display
+        \ containedin=@pregClassRange_any
+        \ contains=pregEscapePHP
+      hi link pregClassEscapeDouble1 pregClassEscape
+
+      " in the unknown escapes, match those that make a special character
+      " take on its literal meaning (except for <single-quote> which is covered next)
+      syntax match pregEscapeLiteral /\\[^A-Za-z0-9']/ contained containedin=pregEscapeUnknown display
+      syntax match pregEscapeLiteral /\\\\\\[\\']/ contained containedin=pregEscapeUnknown display
+
+      syntax match pregEscapeSingleQuote /\\'/ contained containedin=pregEscapeUnknown display
+
+      " match the escaped strings which are known
+      syntax match pregEscapeSpecial /\C\\[rntdswbzDSWBAZ]/ contained containedin=pregEscapeUnknown display
+      syntax match pregEscapeSpecial /\C\\x\x\{0,2}/ contained containedin=pregEscapeUnknown display
+      syntax match pregBackreference /\\[1-9][0-9]\@!/ contained containedin=pregEscapeUnknown display
+
+      " match the PHP escaping in literal escapes
+      syntax match pregEscapePHP /\\[\\']/he=s+1 contained display
+              \ containedin=pregEscapeLiteral,pregEscapeSingleQuote
+      "syntax match pregEscapeSuperMatch /\\'/ transparent containedin=pregEscapeLiteral contains=pregEscapeSuper
+      "syntax match pregEscapeSuper /\\./he=s+1 containedin=pregEscapeSuperMatch
+
+      " these can be found inside super-escapes and give the escaped
+      " characer the correct colour
+
+      " this captures confusing usage of escape characters
+      syntax match pregEscapeAmbiguous /\\\\[^\\]/ contained display
+        \ containedin=@pregString_any,@pregClass_any
+      syntax match pregEscapeAmbiguous /\\\\\\[^\\']/ contained display
+        \ containedin=@pregString_any,@pregClass_any
+    endfunction
+    call s:FindPregEscape()
+
+    " ===================================================
+    function! s:FindPregSpecial()
+      " look for special characters
+      syntax match pregSpecial /[$^|.]/ contained containedin=@pregString_any display
+
+      " find a ] character at the start of a character range ...
+      syntax match pregClassIncStartBracket /\]/ contained display
+      syntax match pregClassExcStartBracket /\]/ contained display
+      hi link pregClassIncStartBracket pregClassInc
+      hi link pregClassExcStartBracket pregClassExc
+
+      " look for the dash inside a class
+      "syntax match pregSpecial /\v\-&(\[\^?)@<!&.\]@!/ contained containedin=@pregClass_any display
+
+      " look for a character range inside a character class.
+      "	syntax cluster pregClassRange_any add=pregClassIncRange
+      "	syntax match pregClassIncRange /[^\\]-\([^\\\]]\|\\[^\\]\)/ contained containedin=@pregClassInc_any display
+      "	syntax match pregClassIncRange /\\.-\([^\\\]]\|\\[^\\]\)/ contained containedin=@pregClassInc_any display
+      "	syntax match pregClassIncRange /\\.-\([^\\\]]\|\\[^\\]\)/ contained containedin=@pregClassInc_any display
+    endfunction
+    call s:FindPregSpecial()
+
+    " ===================================================
+    function! s:FindPregQuantifiers()
+      syntax match pregQuantifier /[*+?]?\?/ contained containedin=@pregString_any display
+      syntax match pregQuantifierComplex /{\d*\(,\d*\)\?}/ contained containedin=@pregString_any display
+      syntax match pregQuantifier /\d\+/ contained containedin=pregQuantifierComplex display
+    endfunction
+    call s:FindPregQuantifiers()
+
+    " ===================================================
+    function! s:FindPregParens()
+      syntax match pregParens /(/ contained containedin=@pregString_any display
+      syntax match pregParens /\c(?\a\+\(-\a\+\)\=[):]/ contained containedin=@pregString_any display
+        \ contains=pregOption
+      syntax match pregParens /\c(?-\a\+[):]/ contained containedin=@pregString_any display
+        \ contains=pregOption
+      syntax match pregParens /)/ contained containedin=@pregString_any display
+    endfunction
+    call s:FindPregParens()
+
+    " ===================================================
+    function! s:FindPregStrings()
+      syntax case ignore
+
+      " look for preg_* functions which take a single pattern
+      syntax keyword phpPREGFunctions contained containedin=phpParent,phpRegion
+        \ nextgroup=phpPREGOpenParent
+        \ preg_match preg_split preg_match_all preg_grep
+
+      " special case for preg_replace functions which can take an array
+      " of patterns
+      syntax keyword phpPREGFunctions contained containedin=phpParent,phpRegion
+        \ nextgroup=phpPREGReplaceOpenParent
+        \ preg_replace preg_replace_callback
+
+      " highlight the opening parenthesis (just because I have to)
+      syntax match phpPREGOpenParent "(" contained nextgroup=phpPREGStringSingle display
+      syntax match phpPREGReplaceOpenParent "(" contained display
+        \ nextgroup=phpPREGStringSingle,phpPREGArray skipwhite skipnl skipempty
+      hi link phpPREGReplaceOpenParent phpPREGOpenParent
+
+      " match an array of preg patterns
+      syntax keyword phpPREGArray array contained nextgroup=phpPREGArrayOpenParent
+      hi link phpPREGArray phpType
+      syntax match phpPREGArrayOpenParent "(" contained display
+        \ nextgroup=phpPREGArrayStringSingle skipwhite skipnl skipempty
+      hi link phpPREGArrayOpenParent phpPREGOpenParent
+
+      " match a phpString (single-quoted) which is able to contain a pregString_any
+      syntax region phpPREGStringSingle matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+ keepend
+        \ contained contains=@pregString_any display extend
+
+      " match a single-quoted string inside an array, followed by a comma
+      " and another string
+      syntax region phpPREGArrayStringSingle contained display extend keepend
+        \ matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+
+        \ contains=@pregString_any
+        \ nextgroup=phpPREGArrayComma skipwhite skipnl skipempty
+      hi link phpPREGArrayStringSingle phpPREGStringSingle
+
+      syntax match phpPREGArrayComma /,/ contained display
+       \ nextgroup=phpPREGArrayStringSingle skipwhite skipnl skipempty
+
+    endfunction
+    call s:FindPregStrings()
+
+    " ===================================================
+    function! s:FindPregDelimiter()
+      call s:FindPregDelimiter_hex('20') " <- space!
+      call s:FindPregDelimiter_hex('21')
+      call s:FindPregDelimiter_hex('22') " <- double-quote
+      call s:FindPregDelimiter_hex('23')
+      call s:FindPregDelimiter_hex('24')
+      call s:FindPregDelimiter_hex('25')
+      call s:FindPregDelimiter_hex('26')
+      "call s:FindPregDelimiter_hex('27') " <- single-quote
+      "call s:FindPregDelimiter_hex('28')
+      "call s:FindPregDelimiter_hex('29')
+      call s:FindPregDelimiter_hex('2a')
+      call s:FindPregDelimiter_hex('2b')
+      call s:FindPregDelimiter_hex('2c')
+      call s:FindPregDelimiter_hex('2d')
+      call s:FindPregDelimiter_hex('2e')
+      call s:FindPregDelimiter_hex('2f')
+
+      call s:FindPregDelimiter_hex('3a')
+      call s:FindPregDelimiter_hex('3b')
+      "call s:FindPregDelimiter_hex('3c') " <- <less-than> symbol: '<'
+      call s:FindPregDelimiter_hex('3d')
+      "call s:FindPregDelimiter_hex('3e') " <- <greater-than> symbol: '>'
+      call s:FindPregDelimiter_hex('3f')
+      call s:FindPregDelimiter_hex('40')
+
+      "call s:FindPregDelimiter_hex('5b') " <- <left-bracket> symbol: [
+      "call s:FindPregDelimiter_hex('5d') " <- <right-bracket> symbol: ]
+      call s:FindPregDelimiter_hex('5e')
+      call s:FindPregDelimiter_hex('5f')
+      call s:FindPregDelimiter_hex('60')
+
+      call s:FindPregDelimiter_hex('7c')
+      call s:FindPregDelimiter_hex('7e')
+
+      syntax match pregEscapeDelimiter /\\./he=s+1 contained containedin=@pregEscapeDelimiter_any display
+    endfunction
+    function! s:FindPregDelimiter_hex(hex)
+      execute 'syntax cluster pregString_any add=pregString_' . a:hex
+      execute 'syntax region pregString_' . a:hex
+        \ 'contained keepend'
+        \ 'matchgroup=pregDelimiter'
+        \ 'start=/\v%x27@<=%x' . a:hex . '/'
+        \ 'skip=/\v\\\\|\\%x' . a:hex . '/'
+        \ 'end=/\%x' . a:hex . '/'
+        \ 'contains=pregEscapeDelimiter_' . a:hex
+        \ 'nextgroup=pregOptionError'
+      execute 'hi link pregString_' . a:hex . ' pregPattern'
+
+      " match for the escaped delimiter
+      execute 'syntax cluster pregEscapeDelimiter_any add=pregEscapeDelimiter_' . a:hex
+      execute 'syntax match pregEscapeDelimiter_' . a:hex . ' /\\\%x' . a:hex . '/'
+        \ 'display contained containedin=pregString_' . a:hex
+      execute 'hi link pregEscapeDelimiter_' . a:hex . ' pregEscapeLiteral'
+
+      " add a match for the escaped delimiter inside a character class
+      execute 'syntax match pregClassEscapeDelimiter_' . a:hex
+        \ '/\\\%x' . a:hex . '/he=s+1'
+        \ 'contained containedin=pregClassInc_' . a:hex . ',pregClassExc_' . a:hex
+        \ 'contains=pregEscapeDelimiter display'
+
+      " add a match group for the class sets (Inclusive or Exclusive)
+      call s:FindPregDelimiterClass_hex(a:hex, 'Inc', '\\^\\@!')
+      call s:FindPregDelimiterClass_hex(a:hex, 'Exc', '\\^')
+    endfunction
+    function! s:FindPregDelimiterClass_hex(hex, type, circ)
+      " add this hex's pregClassInc to the cluster of all
+      " pregClassInc matches so that all sub-items can be
+      " containedin=@pregClassInc_any
+      let l:command = ''
+        \ . 'syntax cluster pregClass<Inc>_any add=pregClass<Inc>_<hex>'
+        \ . " | "
+
+      " add a region which will define a character class for this
+      " hex, contained only in this pregString_<hex>
+      let l:command = l:command
+        \ . 'syntax region pregClass<Inc>_<hex>'
+        \ . ' matchgroup=pregClassParent start=/\[<circ>\ze\]\@!/ end=/\]/ skip=/\\\\\|\\\]/'
+        \ . ' contained containedin=pregString_<hex>'
+        \ . ' display oneline'
+        \ . " | "
+
+      " give pregClassInc_<hex> same highlighting as pregClassInc
+      let l:command = l:command
+        \ . 'hi link pregClass<Inc>_<hex> pregClass<Inc>'
+        \ . " | "
+
+      " this is an alternate form of the character class region for
+      " this hex, but it is not contained in pregString_<hex> and
+      " can only be activated by a nextgroup=pregClassInc_<hex>
+      let l:command = l:command
+        \ . 'syntax region pregClass<Inc>_<hex>'
+        \ . ' matchgroup=pregClass<Inc> start=/\ze./'
+        \ . ' matchgroup=pregClassParent end=/\]/ skip=/\\]/'
+        \ . ' contained display'
+        \ . " | "
+
+      " this is a special match to start off the character class
+      " region when the very first character inside it is ']',
+      " because otherwise the character class region would end
+      " immediately
+      let l:command = l:command
+        \ . 'syntax match pregClass<Inc>Start_<hex>'
+        \ . ' /\[<circ>\]/ contained display'
+        \ . ' containedin=pregString_<hex>'
+        \ . ' nextgroup=pregClass<Inc>_<hex>'
+        \ . ' contains=pregClass<Inc>StartBracket'
+        \ . " | "
+
+      " link this highlighting too
+      let l:command = l:command
+        \ . 'hi link pregClass<Inc>Start_<hex> pregClassParent'
+        \ . " | "
+
+      "let l:command = l:command
+
+      " add the range-matching string here
+"     let l:rangeEnd = '(\\\\\\[\\\x27]|\\x\x{0,2}|\\[^dsw]|[^\\])'
+      let l:command = l:command
+        \ . 'syntax match pregClass<Inc>Range contained display'
+        \ . ' containedin=pregClass<Inc>_<hex>,pregClass<Inc>Start_<hex>'
+        \ . ' /\c\v(\\\\\\[\\\x27]|\\x\x{0,2}|\\[^dsw]|[^\\])\-(\\\\\\[\\\x27]|\\x\x{0,2}|\\[^dsw]|[^]\\])/'
+        \ . ' contains=pregClassEscapeDelimiter_<hex>'
+        \ . " | "
+
+      " perform substitutions on l:command, then execute
+      let l:command = substitute(l:command, '<hex>', a:hex, 'g')
+      let l:command = substitute(l:command, '<circ>', a:circ, 'g')
+      let l:command = substitute(l:command, '<Inc>', a:type, 'g')
+      execute l:command
+    endfunction
+
+    call s:FindPregDelimiter()
+
+    " ===================================================
+    function! s:FindPregOptions()
+      " highlight options
+      syntax match pregOptionError /[^']*/ contained contains=pregOption display
+      syntax match pregOption /\C[eimsuxADSUX]\+/ contained display
+    endfunction
+    call s:FindPregOptions()
+
+    " ===================================================
+    function! s:FindPregComments()
+      syntax match pregComment /\v\(\?\#[^)]*\)/ contained containedin=@pregString_any
+
+      " multi-line comments must be turned on explicitly
+      " TODO: come up with a unified approach to handling
+      " multi-line expressions
+      "syntax match pregComment /\v\#(.*)@>/ contained containedin=@pregString_any
+    endfunction
+    call s:FindPregComments()
+
+    " ===================================================
+    function! s:HiLinks()
+      command -nargs=+ HiLink hi link <args>
+
+      HiLink phpPREGFunctions phpFunctions
+      HiLink phpPREGOpenParent phpParent
+      HiLink phpPREGStringSingle phpStringSingle
+
+      HiLink pregError Error
+      HiLink pregAmbiguous Todo
+
+      HiLink pregDelimiter Statement
+
+      HiLink pregOptionError Error
+      HiLink pregOption Type
+
+      HiLink pregComment pregOption
+
+      HiLink pregEscapeDelimiter pregDelimiter
+      HiLink pregEscapeUnknown pregAmbiguous
+      HiLink pregEscapeLiteral Comment
+      HiLink pregEscapeSpecial PreProc
+      HiLink pregEscapePHP	Type
+      HiLink pregEscapeSingleQuote pregPattern
+      HiLink pregEscapeAmbiguous pregAmbiguous
+
+      HiLink pregPattern	Normal
+      HiLink pregSpecial	Special
+      HiLink pregParens	PreProc
+      HiLink pregBackreference pregParens
+
+      HiLink pregQuantifier pregSpecial
+      HiLink pregQuantifierComplex pregSpecial
+
+      HiLink pregClassParent pregParens
+      HiLink pregClassInc Function
+      " TODO: set to 'Operator' for elflord?
+      HiLink pregClassExc Special
+      HiLink pregClassIncRange Identifier
+      HiLink pregClassExcRange String
+      HiLink pregClassEscape pregParens
+      HiLink pregClassIncEscapeKnown Type
+      HiLink pregClassExcEscapeKnown Statement
+      HiLink pregClassEscapeUnknown pregAmbiguous
+
+      delcommand HiLink
+    endfunction
+    call s:HiLinks()
+  endfunction
+  call s:PHPPregSyntax()
 endif
 
 " ================================================================
@@ -820,4 +1348,4 @@ if main_syntax == 'php'
   unlet main_syntax
 endif
 
-" vim: ts=2 sts=2 sw=2 expandtab
+" vim: ts=8 sw=2 sts=2 expandtab
