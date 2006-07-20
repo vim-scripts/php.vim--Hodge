@@ -1,10 +1,10 @@
 " Vim syntax file
-" Language:     php PHP 3/4/5
+" Language:     php PHP 4/5
 " Maintainer:   Peter Hodge <toomuchphp-vim@yahoo.com>
-" Last Change:  June 25, 2006
+" Last Change:  July 21, 2006
 "
 " URL:      http://www.vim.org/scripts/script.php?script_id=1571
-" Version:  0.9.2
+" Version:  0.9.3
 "
 " ================================================================
 "
@@ -81,9 +81,15 @@
 "           - php_alt_assignByReference = 1/0  [default 1]
 "             ... to highlight '$foo = &$bar' in an alternate colour
 "
+"           - php_alt_properties = 1/0  [default 0]
+"             ... to highlight the member selector '->' in
+"                   '$foo->property'
+"                 differently from
+"                   '$foo->method()'
+"
 "           - php_highlight_quotes = 1/0  [default 0]
 "             ... makes quote characters the same colour as the string
-"                 contents, like most other syntaxes.
+"                 contents, like many other syntaxes.
 "
 "           - php_show_semicolon = 1/0  [default 1]
 "             ... to make the semicolon (;) more visible
@@ -91,21 +97,12 @@
 "
 "    -- Perl-Compatible Regular Expression (PCRE) Syntax --
 "
-"           - php_show_preg = 1/0  [default 0]
+"           - php_show_preg = 1/0  [default 1]
 "             ... to highlight regular expression patterns inside calls
 "                 to preg_match(), preg_replace, etc.
 "
-"           Note: This feature is very functional now, if slightly irregular.
-"                 The highlighting WILL fail under the following conditions:
-"                   - If the pattern is not inside single-quotes
-"                   - If the single-quoted string is split into sections and
-"                     concatenated using the '.' operator
-"                   - A few of the features, such as '(?=' sub-expressions are
-"                     not finished yet.
-"                   - Some of the more tricky escape sequences will show up
-"                     like a 'TODO' item.  You can fix this by adding or
-"                     removing some backslashes.
-"                   - octal sequences are not yet implemented.
+"           Note: This feature will _only_ work for single-quoted strings
+"                 on a single one line.
 "
 " ================================================================
 "
@@ -126,45 +123,47 @@
 "    ii) Same problem if you are setting php_folding = 2 with a closing
 "        } inside an string on the first line of this string.
 "
-"   - A double-quoted string like this:
-"       "hello {$foo->someVar->someMethod()}, this is a string"
-"     will not highlight the () after someMethod.
-"
-"   - A double-quoted string like this:
-"       " hello, $myClass->$myVar "
-"     results in a parse error, however the highlighting does
-"     not show it as an error.
-"
-"   - A double-quoted string like this:
-"       " echo ${$var} "
-"     does not highlight the first '$' as an operator
-"
-"   - An object property by variable does not work:
-"     echo $foo->$bar;
 "
 " ================================================================
 "
-" TODO: PHP Syntax:
+" TODO LIST:
+"
+" PRIORITY:
+"   - provide an option to turn off array index colors [0] etc
+"
+" PHP Syntax:
+"   - Double-quoted strings should recognize "\x9" as well as "\x09"
+"   - Double-quoted strings should recognize "\0" as well as "\101"
 "   - review support for PHP built-in globals:
 "     - ensure all PHP 5.1.4 globals are recognized
 "     - highlight known array keys for GLOBALS, _SERVER, _ENV, etc.
 "   - review support for PHP built-in constants, make sure I've got them all
-"   - review identifier substitution on double-quoted strings
+"   - review support for PHP built-in methods and try to find a better
+"     solution than currently (highlights things like ->setName() in places
+"     where it shouldn't).
 "
-" TODO: PCRE Syntax:
-"   - detect octal characters (e.g., \077)
-"   - correct highlighting for 'ambiguous' escape sequences
-"   - Add support for multi-part-concatenated single-quoted strings.
+" PCRE Syntax:
+"   - fix bug where \\' does not close off the string ...
+"   - Add support for the paired delimiters <> () [] {}
 "   - Add support for double-quoted strings.
-"   - Add support for all '(?>', '(?<=', etc, features.
-"   - Add support for paired delimiters <> () [] {}
+"   - Add support for multi-line patterns
+"   - review the monster I have created and tidy it up if possible
 "
 "
 " Future Plans:
+"   - add support for a dedicated PHP colorscheme (maybe)
+"   - add ability to highlight user-defined functions and keywords
+"     using any of the following means:
+"       1) a comma-separated string of user functions
+"       2) a file containing user functions
+"       3) using names from the tags file(s)
+"           (this may be better as a separate plugin)
 "   - detect errors in element positions: e.g.,
 "     Don't allow creating a class with the same name as a built-in
 "     class or interface, don't allow words like 'final' or 'private'
 "     anywhere except before a function or class definition, etc.
+"   - add support for phpDocumentor comment blocks and tags
+"   - add support for ereg_* functions
 "
 " ================================================================
 
@@ -224,16 +223,14 @@ if exists( "php_htmlInStrings")
   syn cluster phpAddStrings add=@htmlTop
 endif
 
-" special match will highlight any single character as an error
-" (used in a nextgroup option when the correct match does not follow)
-syntax match phpErrorNonMember /\c[^$a-z_{]/ contained
-
 syn case match
 
 " Env Variables
+" TODO: check these against the latest PHP manual
 syn keyword	phpEnvVar	GATEWAY_INTERFACE SERVER_NAME SERVER_SOFTWARE SERVER_PROTOCOL REQUEST_METHOD QUERY_STRING DOCUMENT_ROOT HTTP_ACCEPT HTTP_ACCEPT_CHARSET HTTP_ENCODING HTTP_ACCEPT_LANGUAGE HTTP_CONNECTION HTTP_HOST HTTP_REFERER HTTP_USER_AGENT REMOTE_ADDR REMOTE_PORT SCRIPT_FILENAME SERVER_ADMIN SERVER_PORT SERVER_SIGNATURE PATH_TRANSLATED SCRIPT_NAME REQUEST_URI	contained
 
 " Internal Variables
+" TODO: check these against the latest PHP manual
 syn keyword	phpIntVar	GLOBALS PHP_ERRMSG PHP_SELF HTTP_GET_VARS HTTP_POST_VARS HTTP_COOKIE_VARS HTTP_POST_FILES HTTP_ENV_VARS HTTP_SERVER_VARS HTTP_SESSION_VARS HTTP_RAW_POST_DATA HTTP_STATE_VARS _GET _POST _COOKIE _FILES _SERVER _ENV _SERVER _REQUEST _SESSION	contained
 
 " Constants
@@ -241,6 +238,7 @@ syn keyword	phpIntVar	GLOBALS PHP_ERRMSG PHP_SELF HTTP_GET_VARS HTTP_POST_VARS H
 " - this keyword list is way behind! Unfortunately, all I have
 "   access to at the moment is my home installation of 5.1.2, so I will add
 "   the ... er ... 626 ... constants harvested from get_defined_constants().
+" TODO: check these against the latest PHP manual
 syn keyword phpCoreConstant contained ASSERT_ACTIVE ASSERT_BAIL ASSERT_CALLBACK ASSERT_QUIET_EVAL ASSERT_WARNING
 syn keyword phpCoreConstant contained CAL_DOW_DAYNO CAL_DOW_LONG CAL_DOW_SHORT CAL_EASTER_ALWAYS_GREGORIAN CAL_EASTER_ALWAYS_JULIAN CAL_EASTER_DEFAULT CAL_EASTER_ROMAN CAL_FRENCH CAL_GREGORIAN CAL_JULIAN CAL_NUM_CALS CAL_JEWISH CAL_JEWISH_ADD_ALAFIM CAL_JEWISH_ADD_ALAFIM_GERESH CAL_JEWISH_ADD_GERESHAYIM CAL_MONTH_FRENCH CAL_MONTH_GREGORIAN_LONG CAL_MONTH_GREGORIAN_SHORT CAL_MONTH_JEWISH CAL_MONTH_JULIAN_LONG CAL_MONTH_JULIAN_SHORT
 syn keyword phpCoreConstant contained CASE_LOWER CASE_UPPER CHAR_MAX
@@ -344,6 +342,7 @@ syn keyword	phpMagicConstant	 __LINE__ __FILE__ __FUNCTION__ __METHOD__ __CLASS_
 
 
 " Function and Methods ripped from php_manual_de.tar.gz Jan 2003
+" TODO: check these against the latest PHP manual
 syn case ignore
 syn keyword	phpFunctions	apache_child_terminate apache_get_modules apache_get_version apache_getenv apache_lookup_uri apache_note apache_request_headers apache_response_headers apache_setenv ascii2ebcdic ebcdic2ascii getallheaders virtual	contained
 syn keyword	phpFunctions	array_change_key_case array_chunk array_combine array_count_values array_diff_assoc array_diff_uassoc array_diff array_fill array_filter array_flip array_intersect_assoc array_intersect array_key_exists array_keys array_map array_merge_recursive array_merge array_multisort array_pad array_pop array_push array_rand array_reduce array_reverse array_search array_shift array_slice array_splice array_sum array_udiff_assoc array_udiff_uassoc array_udiff array_unique array_unshift array_values array_walk array arsort asort compact count current each end extract in_array key krsort ksort list natcasesort natsort next pos prev range reset rsort shuffle sizeof sort uasort uksort usort	contained
@@ -515,32 +514,51 @@ syn match	phpOperator	/=>/	contained display
 " - altered relations to match strict comparisons (=== and !==)
 " - highlight the 'instanceof' operator as a relation operator
 "   rather than a structure, if comparison support is a priority.
-syn match	phpRelation	"[!=]==\="	contained display
-syn match	phpRelation	"[<>]=\="	contained display
+syn match	phpRelation	"===\="	contained display
+syn match	phpRelation	"!==\="	contained display
+syn match	phpRelation	"<=\="	contained display
+syn match	phpRelation	">=\="	contained display
 if ! exists('php_alt_comparisons') || php_alt_comparisons
   syntax case ignore
   syntax keyword phpRelation instanceof contained containedin=phpRegion
 endif
 
 
-syn match	phpMemberSelector /->/	contained display nextgroup=phpErrorNonMember
+" identifier stuff
+syn match	phpMemberSelector /->/	contained display
 syn match	phpVarSelector	/\$/	contained display
 
 " Identifier
-syn match	phpIdentifier	"$\h\w*"	contained contains=phpEnvVar,phpIntVar,phpVarSelector display
-syn match	phpIdentifierSimply	"${\h\w*}"	contains=phpOperator,phpParent	contained display
-syn region	phpIdentifierComplex	matchgroup=phpParent start="{\$"rs=e-1 end="}"	contains=phpIdentifier,phpMemberSelector,phpVarSelector,phpIdentifierComplexP	contained extend
-syn region	phpIdentifierComplexP	matchgroup=phpParent start="\[" end="]"	contains=@phpClInside	contained
+syn match phpIdentifier /$\h\w*/ contained display contains=phpEnvVar,phpIntVar,phpVarSelector nextgroup=phpIdentifierIndex
+"syn match	phpIdentifierSimply	"${\h\w*}"	contains=phpOperator,phpParent	contained display
+
+" Peter Hodge:
+" - changing this item to contain all PHP inside syntax, as it
+"   is able to
+syn region phpIdentifierComplex contained display matchgroup=phpParent start="\${" end="}"
+  \ contains=@phpClInside
+  \ nextgroup=phpIdentifierIndex
+
+" create an identifier match for double-quoted strings:
+syn match phpIdentifierInString "$\h\w*" contained display nextgroup=phpIdentifierIndexInString,phpPropertyInString
+  \ contains=phpEnvVar,phpIntVar,phpVarSelector containedin=@phpStringSubs
+syn region phpIdentifierInStringComplex matchgroup=phpParent start=/{\ze\$/ start=/\${\ze\$/ end=/}/ contained display extend
+  \ contains=@phpClInside containedin=@phpStringSubs
+hi link phpIdentifierInString phpIdentifier
+
+" create a match for the identifier numeric indexes
+" TODO: error if invalid characters inbetween?
+syn match phpIdentifierIndexInString /\[\%(\d\+\|\h\w*\)\]/ contained display contains=phpParent
+syn match phpIdentifierIndex /\[\d\+\]\|{\d\+}/ contained display contains=phpParent
+hi link phpIdentifierIndexInString phpIdentifierIndex
 
 " Methoden
-syn match phpMethodsVar "->\h\w*" contained display contains=phpMethods,phpMemberSelector
-  \ containedin=phpStringDouble,phpHereDoc
+syn match phpMethodsVar "->\h\w*" contained display contains=phpMethods,phpMemberSelector nextgroup=phpIdentifierIndex
 
 " Peter Hodge - June 25, 2006
 " - trying to fix support for things like
 "   $foo->$bar
-syn match phpMethodsVar /->\$\h\w*/ contained display contains=phpMemberSelector,phpIdentifier
-  \ containedin=phpStringDouble,phpHereDoc
+syn match phpMethodsVar /->\$\h\w*/ contained display contains=phpMemberSelector,phpIdentifier nextgroup=phpIdentifierIndex
 
 " Include
 syn keyword	phpInclude	include require include_once require_once	contained
@@ -577,7 +595,9 @@ syn keyword	phpTodo	todo fixme xxx	contained
 if exists("php_parent_error_open")
   syn region	phpComment	start="/\*" end="\*/"	contained contains=phpTodo
 else
-  syn region	phpComment	start="/\*" end="\*/"	contained contains=phpTodo extend
+  " URGENT: remove this debugging stuff:
+  syn region	phpComment	start="/\*\(DEBUG\)\@!" end="\*/"	contained contains=phpTodo extend
+  syn match	phpComment	"/\*DEBUG"	contained extend
 endif
 if version >= 600
   syn match	phpComment	"#.\{-}\(?>\|$\)\@="	contained contains=phpTodo
@@ -594,25 +614,45 @@ endif
 "   to 'phpQuote<type>' so that they can be coloured individually
 "   (which I have done below).
 
+" Peter Hodge - July 20 2006
+" - adding a cluster for strings which should have variable substitution
+syntax cluster phpStringSubs add=phpStringDouble,phpHereDoc,phpBacktick
+
 " String
 if exists("php_parent_error_open")
-  syn region	phpStringDouble	matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex	contained keepend
-  syn region	phpBacktick	matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\`+ end=+`+	contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex	contained keepend
-  syn region	phpStringSingle	matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings contained keepend
+  " Peter Hodge - removing the contains=phpIdentifier* stuff
+  " and defining them elsewhere ... there needs to be separate
+  " syntax items for identifiers in strings because they are alot more
+  " complex in strings
+" syn region phpStringDouble  matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+    contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex	contained keepend
+  syn region phpStringDouble  matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+    contains=@phpAddStrings,phpSpecialChar contained keepend
+" syn region phpBacktick      matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\`+ end=+`+  contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex	contained keepend
+  syn region phpBacktick      matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\`+ end=+`+  contains=@phpAddStrings,phpSpecialChar contained keepend
+  syn region phpStringSingle  matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+    contains=@phpAddStrings contained keepend
 else
-  syn region	phpStringDouble	matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+	contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
-  syn region	phpBacktick	matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\`+ end=+`+	contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
-  syn region	phpStringSingle	matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+	contains=@phpAddStrings contained keepend extend
+" syn region phpStringDouble  matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+    contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
+  syn region phpStringDouble  matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+    contains=@phpAddStrings,phpSpecialChar contained extend keepend
+" syn region phpBacktick      matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\`+ end=+`+  contains=@phpAddStrings,phpSpecialChar,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex contained extend keepend
+  syn region phpBacktick      matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\`+ end=+`+  contains=@phpAddStrings,phpSpecialChar contained extend keepend
+  syn region phpStringSingle  matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+    contains=@phpAddStrings contained keepend extend
 endif
 
 " HereDoc
 if version >= 600
   syn case match
-  syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\)\@<=\z(\I\i*\)$" end="^\z1\(;\=$\)\@="	contained contains=phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+  " Peter Hodge - July 20 2006
+  " - removing contains=phpIdentifer stuff, these are now defined elsewhere
+  "   and added in using contains=phpHereDoc
+" syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\s*\)\@<=\z(\I\i*\)$" end="^\z1\(;\=$\)\@="	contained contains=phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+"" including HTML,JavaScript,SQL even if not enabled via options
+" syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\s*\)\@<=\z(\(\I\i*\)\=\(html\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlTop,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+" syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\s*\)\@<=\z(\(\I\i*\)\=\(sql\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@sqlTop,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+" syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\s*\)\@<=\z(\(\I\i*\)\=\(javascript\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlJavascript,phpIdentifierSimply,phpIdentifier,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+  syn region phpHereDoc matchgroup=phpHereDocDelimiter start="\(<<<\s*\)\@<=\z(\I\i*\)$" end="^\z1\(;\=$\)\@=" contained contains=phpSpecialChar keepend extend
 " including HTML,JavaScript,SQL even if not enabled via options
-  syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(html\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlTop,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
-  syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(sql\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@sqlTop,phpIdentifier,phpIdentifierSimply,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
-  syn region	phpHereDoc	matchgroup=phpHereDocDelimiter start="\(<<<\)\@<=\z(\(\I\i*\)\=\(javascript\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlJavascript,phpIdentifierSimply,phpIdentifier,phpIdentifierComplex,phpSpecialChar,phpMethodsVar keepend extend
+  syn region phpHereDoc matchgroup=phpHereDocDelimiter start="\(<<<\s*\)\@<=\z(\(\I\i*\)\=\(html\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlTop,phpSpecialChar keepend extend
+  syn region phpHereDoc matchgroup=phpHereDocDelimiter start="\(<<<\s*\)\@<=\z(\(\I\i*\)\=\(sql\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@sqlTop,phpSpecialChar keepend extend
+  syn region phpHereDoc matchgroup=phpHereDocDelimiter start="\(<<<\s*\)\@<=\z(\(\I\i*\)\=\(javascript\)\c\(\i*\)\)$" end="^\z1\(;\=$\)\@="	contained contains=@htmlJavascript,phpSpecialChar keepend extend
   syn case ignore
 endif
 
@@ -628,7 +668,7 @@ else
   syn match phpParent	"[({[\]})]"	contained
 endif
 
-syn cluster	phpClConst	contains=phpFunctions,phpIdentifier,phpConditional,phpRepeat,phpStatement,phpOperator,phpRelation,phpStringSingle,phpStringDouble,phpBacktick,phpNumber,phpFloat,phpKeyword,phpType,phpBoolean,phpStructure,phpMethodsVar,phpMagicConstant,phpCoreConstant,phpException
+syn cluster	phpClConst	contains=phpFunctions,phpIdentifier,phpIdentifierComplex,phpConditional,phpRepeat,phpStatement,phpOperator,phpRelation,phpStringSingle,phpStringDouble,phpBacktick,phpNumber,phpFloat,phpKeyword,phpType,phpBoolean,phpStructure,phpMethodsVar,phpMemberSelector,phpMagicConstant,phpCoreConstant,phpException
 syn cluster	phpClInside	contains=@phpClConst,phpComment,phpLabel,phpParent,phpParentError,phpInclude,phpHereDoc
 syn cluster	phpClFunction	contains=@phpClInside,phpDefine,phpParentError,phpStorageClass
 syn cluster	phpClTop	contains=@phpClFunction,phpFoldFunction,phpFoldClass,phpFoldInterface,phpFoldTry,phpFoldCatch
@@ -703,15 +743,17 @@ syn match phpSpecialChar /\\\$/ contained display
 " Peter Hodge - June 17 2006:
 " - match \" as a specialchar inside a double-quoted string,
 " - OR, match \' inside a single-quoted string
-syntax match phpStringSpecialChar /\\"/ contained containedin=phpStringDouble display
-syntax match phpStringSpecialChar /\\'/ contained containedin=phpStringSingle display
+syntax match phpStringSpecialChar /\\["\\]/ contained containedin=@phpStringSubs display
+syntax match phpStringSpecialChar /\\['\\]/ contained containedin=phpStringSingle display
 hi link phpStringSpecialChar phpSpecialChar
+
+" highlight incorrect use of -> as an error
+syn match phpMemberError /->[a-z{_$]\@!/ contained containedin=phpRegion
 
 " highlight variables inside double-quoted strings
 "syn match phpStringIdentifier /\c\$\h\w*\(->\h\w*\|->[^ \t\r\n"a-z_]\)\=/ contained display
 "  \ containedin=phpStringDouble,phpHereDoc
 "  \ contains=phpIdentifier,phpMemberSelector
-syn match phpMethodsVar "->\h\w*" contained contains=phpMethods,phpMemberSelector display containedin=phpStringDouble
 
 " different syntax highlighting for 'echo', 'print', 'switch', 'die' and 'list' keywords
 " to better indicate what they are.
@@ -770,16 +812,34 @@ if php_show_semicolon
   syntax match phpSemicolon /;/ contained containedin=phpRegion display
 endif
 
+if exists('php_alt_properties') && g:php_alt_properties
+  " differentiate between an object method and an object variable:
+  " highlight '->' in a different colour if a method
+  " TODO: tidy this up?
+  syntax cluster phpClInside add=phpPropertySelector
+  syntax match phpPropertySelector /->\ze\%(\$\=\w\+\)\@>(\@!/ contained containedin=phpMemberSelector
+  syntax match phpPropertySelector /\v\-\>\ze%(\{%([^'"}]|'%(\\'|[^'])*'|"%(\\"|[^"])*")*\})@>\(@!/ contained containedin=phpMemberSelector
+
+  " for going in string where can be followed by () without making it a method
+  " call
+  syntax match phpPropertyInString /->\h\w*/ contained contains=phpPropertySelectorInString
+  syntax match phpPropertySelectorInString /->/ contained
+  hi link phpPropertySelectorInString phpPropertySelector
+else
+  syntax match phpPropertyInString /->\h\w*/ contained contains=phpMemberSelector
+endif
+
+
 if ! exists('php_special_functions') || php_special_functions
-        " Highlighting for PHP built-in functions which exhibit special behaviours
-        " - isset()/unset()/empty() are not real functions.
-        " - compact()/extract() directly manipulate variables in the local scope where
-        "   regular functions would not be able to.
-        " - eval() is the token 'make_your_code_twice_as_complex()' function for PHP.
-        " - user_error()/trigger_error() can be overloaded by set_error_handler and also
-        "   have the capacity to terminate your script when type is E_USER_ERROR.
-        syntax keyword phpSpecialFunction contained containedin=phpRegion
-                \ user_error trigger_error isset unset eval extract compact empty
+  " Highlighting for PHP built-in functions which exhibit special behaviours
+  " - isset()/unset()/empty() are not real functions.
+  " - compact()/extract() directly manipulate variables in the local scope where
+  "   regular functions would not be able to.
+  " - eval() is the token 'make_your_code_twice_as_complex()' function for PHP.
+  " - user_error()/trigger_error() can be overloaded by set_error_handler and also
+  "   have the capacity to terminate your script when type is E_USER_ERROR.
+  syntax keyword phpSpecialFunction contained containedin=phpRegion
+    \ user_error trigger_error isset unset empty eval extract compact
 endif
 
 if php_alt_assignByReference
@@ -842,7 +902,7 @@ if version >= 508 || !exists("did_php_syn_inits")
   if exists("php_oldStyle")
     hi	phpOperator guifg=SeaGreen ctermfg=DarkGreen
     hi	phpIdentifier guifg=DarkGray ctermfg=Brown
-    hi	phpIdentifierSimply guifg=DarkGray ctermfg=Brown
+"    hi	phpIdentifierSimply guifg=DarkGray ctermfg=Brown
     hi	phpVarSelector guifg=SeaGreen ctermfg=DarkGreen
 
     hi	phpRelation guifg=SeaGreen ctermfg=DarkGreen
@@ -852,7 +912,7 @@ if version >= 508 || !exists("did_php_syn_inits")
   else
     HiLink phpOperator          Operator    " => Statement(Yellow) / Operator(Red)
     HiLink phpIdentifier        Identifier  " => Identifier(Cyan)
-    HiLink phpIdentifierSimply	phpIdentifier
+"    HiLink phpIdentifierSimply	phpIdentifier
     HiLink phpVarSelector       Operator         " => Statement (yellow)
 
 	if ! exists('php_alt_comparisons') || php_alt_comparisons
@@ -891,9 +951,10 @@ if version >= 508 || !exists("did_php_syn_inits")
   HiLink phpType          Type          " Green
 
   " other operations
-  HiLink phpSupressErrors   PreProc   " LightMagenta
-  HiLink phpAssignByRef     Type      " Green
-  HiLink phpMemberSelector	Structure " => Type (Green)
+  HiLink phpSupressErrors     PreProc   " LightMagenta
+  HiLink phpAssignByRef       Type      " Green
+  HiLink phpMemberSelector    Structure " => Type (Green)
+  HiLink phpPropertySelector  Function  " => Identifier (Cyan) / (White)
 
   " execution control structures
   HiLink phpConditional   Conditional   " => Statement (Yellow) / Repeat (White)
@@ -953,10 +1014,11 @@ if version >= 508 || !exists("did_php_syn_inits")
   HiLink phpSpecialFunction SpecialComment  " => Special (Orange / Red)
 
   " other items
+  HiLink phpMemberError     Error
   HiLink phpParentError     Error
   HiLink phpOctalError      Error
   HiLink phpTodo            Todo
-  HiLink phpErrorNonMember  Error
+  HiLink phpIdentifierIndex phpFunctions
 
   " Peter Hodge June 17, 2006:
   " changed matchgroup for phpRegion from Delimiter to phpRegionDelimiter
@@ -981,71 +1043,14 @@ if ! exists('g:php_show_preg') || g:php_show_preg
     "       PHP.
 
     " ===================================================
-    function! s:FindPregEscape()
-      " look for any escape sequence inside the pattern and mark them as errors
-      " by default, all escape sequences are errors
-      syntax match pregEscapeUnknown /\\./ contained containedin=@pregString_any display
-
-      syntax cluster pregClass_any add=@pregClassInc_any,@pregClassExc_any
-      syntax cluster pregClassRange_any add=pregClassIncRange,pregClassExcRange
-
-      syntax match pregClassEscapeUnknown /\\[^\^\-\]]/ contained containedin=@pregClass_any display
-      "syntax match pregClassEscape /\\[\^\-\]]/he=s+1 contained containedin=@pregClass_any display
-      syntax match pregClassEscape /\\[^a-zA-Z0-9]/he=s+1 contained containedin=@pregClass_any display
-
-      syntax match pregClassIncEscapeKnown /\C\\[abtnfretdswDSW]/ contained display
-        \ containedin=@pregClassInc_any,pregClassIncRange
-      syntax match pregClassExcEscapeKnown /\C\\[abtnfretdswDSW]/ contained display
-        \ containedin=@pregClassExc_any,pregClassExcRange
-      " ... and also for hex characters
-      syntax match pregClassIncEscapeKnown /\C\\x\x\{0,2}/ contained display
-        \ containedin=@pregClassInc_any,pregClassIncRange
-      syntax match pregClassExcEscapeKnown /\C\\x\x\{0,2}/ contained display
-        \ containedin=@pregClassExc_any,pregClassExcRange
-
-      syntax match pregClassEscapeSingleQuote /\\'/ contained transparent display
-        \ containedin=@pregClass_any,@pregClassRange_any
-        \ contains=pregEscapePHP 
-      syntax match pregClassEscapeSingleQuoteAmbiguous /\\\\\\'/ contained display
-        \ containedin=@pregClass_any
-      hi link pregClassEscapeSingleQuoteAmbiguous pregEscapeAmbiguous
-
-      syntax match pregClassEscapeDouble1 /\v\\\\(\\\\)@=/ contained containedin=@pregClass_any display
-        \ contains=pregEscapePHP
-        \ nextgroup=pregClassEscapeDouble2
-      syntax match pregClassEscapeDouble2 /\\\\/ contained transparent display
-        \ containedin=@pregClassRange_any
-        \ contains=pregEscapePHP
-      hi link pregClassEscapeDouble1 pregClassEscape
-
-      " in the unknown escapes, match those that make a special character
-      " take on its literal meaning (except for <single-quote> which is covered next)
-      syntax match pregEscapeLiteral /\\[^A-Za-z0-9']/ contained containedin=pregEscapeUnknown display
-      syntax match pregEscapeLiteral /\\\\\\[\\']/ contained containedin=pregEscapeUnknown display
-
-      syntax match pregEscapeSingleQuote /\\'/ contained containedin=pregEscapeUnknown display
-
-      " match the escaped strings which are known
-      syntax match pregEscapeSpecial /\C\\[rntdswbzDSWBAZ]/ contained containedin=pregEscapeUnknown display
-      syntax match pregEscapeSpecial /\C\\x\x\{0,2}/ contained containedin=pregEscapeUnknown display
-      syntax match pregBackreference /\\[1-9][0-9]\@!/ contained containedin=pregEscapeUnknown display
-
-      " match the PHP escaping in literal escapes
-      syntax match pregEscapePHP /\\[\\']/he=s+1 contained display
-              \ containedin=pregEscapeLiteral,pregEscapeSingleQuote
-      "syntax match pregEscapeSuperMatch /\\'/ transparent containedin=pregEscapeLiteral contains=pregEscapeSuper
-      "syntax match pregEscapeSuper /\\./he=s+1 containedin=pregEscapeSuperMatch
-
-      " these can be found inside super-escapes and give the escaped
-      " characer the correct colour
-
-      " this captures confusing usage of escape characters
-      syntax match pregEscapeAmbiguous /\\\\[^\\]/ contained display
-        \ containedin=@pregString_any,@pregClass_any
-      syntax match pregEscapeAmbiguous /\\\\\\[^\\']/ contained display
-        \ containedin=@pregString_any,@pregClass_any
+    " Allow for dropping out of SQ and concatenating a variable ...
+    function! s:FindPregConcat()
+      syntax region pregConcat contained oneline containedin=@pregString_any keepend
+        \ matchgroup=phpQuoteSingle start=/'/ end=/'/
+        \ skip=/\['.\{-}'\]\|('.\{-}'[,)]/
+        \ contains=@phpClInside
     endfunction
-    call s:FindPregEscape()
+    call s:FindPregConcat()
 
     " ===================================================
     function! s:FindPregSpecial()
@@ -1070,6 +1075,94 @@ if ! exists('g:php_show_preg') || g:php_show_preg
     call s:FindPregSpecial()
 
     " ===================================================
+    function! s:FindPregEscape()
+      " look for any escape sequence inside the pattern and mark them as errors
+      " by default, all escape sequences are errors
+      syntax match pregEscapeUnknown /\\./ contained containedin=@pregString_any display
+
+      syntax cluster pregClass_any add=@pregClassInc_any,@pregClassExc_any
+      syntax cluster pregClassRange_any add=pregClassIncRange,pregClassExcRange
+
+      syntax match pregClassEscapeUnknown /\\[^\^\-\]]/ contained containedin=@pregClass_any display
+      "syntax match pregClassEscape /\\[\^\-\]]/he=s+1 contained containedin=@pregClass_any display
+      syntax match pregClassEscape /\\[^a-zA-Z0-9]/he=s+1 contained containedin=@pregClass_any display
+
+      " known escape sequences:
+      syntax match pregClassIncEscapeKnown /\C\\[abtnfretdswDSW]/ contained display
+        \ containedin=@pregClassInc_any,pregClassIncRange
+      syntax match pregClassExcEscapeKnown /\C\\[abtnfretdswDSW]/ contained display
+        \ containedin=@pregClassExc_any,pregClassExcRange
+
+      " ... including hex sequences
+      syntax match pregClassIncEscapeKnown /\C\\x\x\{0,2}/ contained display
+        \ containedin=@pregClassInc_any,pregClassIncRange
+      syntax match pregClassExcEscapeKnown /\C\\x\x\{0,2}/ contained display
+        \ containedin=@pregClassExc_any,pregClassExcRange
+
+      " ... and octal sequences
+      syntax match pregClassIncEscapeKnown /\\\o\{1,3}/ contained display
+        \ containedin=@pregClassInc_any,pregClassIncRange
+      syntax match pregClassExcEscapeKnown /\\\o\{1,3}/ contained display
+        \ containedin=@pregClassExc_any,pregClassExcRange
+
+      syntax match pregClassEscapeSingleQuote /\\'/ contained transparent display
+        \ containedin=@pregClass_any,@pregClassRange_any
+        \ contains=pregEscapePHP 
+
+      syntax match pregClassEscape /\\\\\%(\\'\)\@=/ contained display
+        \ containedin=@pregClass_any
+        \ contains=pregEscapePHP
+        \ nextgroup=pregClassEscapeSingleQuote
+
+      syntax match pregClassEscapeDouble1 /\\\\\(\\\\\)\@=/ contained containedin=@pregClass_any display
+        \ contains=pregEscapePHP
+        \ nextgroup=pregClassEscapeDouble2
+      syntax match pregClassEscapeDouble2 /\\\\/ contained transparent display
+        \ containedin=@pregClassRange_any
+        \ contains=pregEscapePHP
+      hi link pregClassEscapeDouble1 pregClassEscape
+
+      " in the unknown escapes, match those that make a special character
+      " take on its literal meaning (except for <single-quote> which is covered next)
+      syntax match pregEscapeLiteral /\\[^A-Za-z0-9']/ contained containedin=pregEscapeUnknown display
+      syntax match pregEscapeLiteral /\\\\\\[\\']/ contained containedin=pregEscapeUnknown display
+
+      syntax match pregEscapeSingleQuote /\\'/ contained containedin=pregEscapeUnknown display
+
+      " match the escaped strings which are known
+      syntax match pregBackreference /\\[1-9][0-9]\=/ contained containedin=pregEscapeUnknown display
+      syntax match pregEscapeSpecial /\C\\[rntdswbzDSWBAZ]/ contained containedin=pregEscapeUnknown display
+      syntax match pregEscapeSpecial /\C\\x\x\{0,2}/ contained containedin=pregEscapeUnknown display
+      syntax match pregEscapeSpecial /\\\%(0\o\{0,2}\|\o\o\o\)/ contained containedin=pregEscapeUnknown display
+
+      " match the PHP escaping in literal escapes
+      syntax match pregEscapePHP /\\[\\']/he=s+1 contained display
+              \ containedin=pregEscapeLiteral,pregEscapeSingleQuote
+      "syntax match pregEscapeSuperMatch /\\'/ transparent containedin=pregEscapeLiteral contains=pregEscapeSuper
+      "syntax match pregEscapeSuper /\\./he=s+1 containedin=pregEscapeSuperMatch
+
+      " these can be found inside super-escapes and give the escaped
+      " characer the correct colour
+
+      " this captures confusing usage of escape characters
+      syntax match pregEscapeNotNeeded /\\\(\\[^\\]\)\@=/ contained display
+        \ containedin=@pregString_any,@pregClass_any
+
+      " a triple-backslash can be dangerous: it is not obvious that
+      " the meaning of the 3rd backslash is dependent on the following
+      " character; if the following character is changed to a
+      " single-quote or backslash, it will change the meaning of the 3
+      " backslashes
+      syntax match pregEscapeLiteral /\\\\\\\%([\\']\)\@!/ contained display containedin=@pregString_any
+      syntax match pregClassEscape /\\\\\\\%([\\']\)\@!/he=e-1 contained display containedin=@pregClass_any
+        \ contains=pregEscapePHP
+        "\ nextgroup=pregEscapeDangerousPart2
+      "syntax match pregEscapeDangerousPart2 /\\\\/ contained display
+      "hi link pregEscapeDangerousPart2 pregEscapeLiteral
+    endfunction
+    call s:FindPregEscape()
+
+    " ===================================================
     function! s:FindPregQuantifiers()
       syntax match pregQuantifier /[*+?]?\?/ contained containedin=@pregString_any display
       syntax match pregQuantifierComplex /{\d*\(,\d*\)\?}/ contained containedin=@pregString_any display
@@ -1080,9 +1173,14 @@ if ! exists('g:php_show_preg') || g:php_show_preg
     " ===================================================
     function! s:FindPregParens()
       syntax match pregParens /(/ contained containedin=@pregString_any display
-      syntax match pregParens /\c(?\a\+\(-\a\+\)\=[):]/ contained containedin=@pregString_any display
+      syntax match pregParens /(?\%(<[=!]\||R\|[:>=!]\|(?=\)/ contained containedin=@pregString_any display
+      syntax match pregParens /(?(\d\+)/ contained containedin=@pregString_any display
+        \ contains=pregBackreferenceNumber
+      syntax match pregBackreferenceNumber /\d\+/ contained display
+      hi link pregBackreferenceNumber pregBackreference
+      syntax match pregParens /(?\a\+\(-\a\+\)\=[):]/ contained containedin=@pregString_any display
         \ contains=pregOption
-      syntax match pregParens /\c(?-\a\+[):]/ contained containedin=@pregString_any display
+      syntax match pregParens /(?-\a\+[):]/ contained containedin=@pregString_any display
         \ contains=pregOption
       syntax match pregParens /)/ contained containedin=@pregString_any display
     endfunction
@@ -1117,8 +1215,14 @@ if ! exists('g:php_show_preg') || g:php_show_preg
       hi link phpPREGArrayOpenParent phpPREGOpenParent
 
       " match a phpString (single-quoted) which is able to contain a pregString_any
-      syntax region phpPREGStringSingle matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+ keepend
-        \ contained contains=@pregString_any display extend
+      " NOTE: have just removed the 'keepend' which was to stop things going
+      " crazy when the ending delimiter is missing, now we should be able to
+      " create a match to extend the preg string
+      " NOTE: have added a 'oneline' option to prevent things going more crazy
+      syntax region phpPREGStringSingle matchgroup=phpQuoteSingle start=+'+ end=+'+
+        \ skip=+\\\\\|\\'+
+        \ contained display extend
+        \ contains=@pregString_any
 
       " match a single-quoted string inside an array, followed by a comma
       " and another string
@@ -1174,11 +1278,13 @@ if ! exists('g:php_show_preg') || g:php_show_preg
     endfunction
     function! s:FindPregDelimiter_hex(hex)
       execute 'syntax cluster pregString_any add=pregString_' . a:hex
+      " NOTE: have added 'oneline' option to stop things going crazy when
+      " ending delimiter is missing
       execute 'syntax region pregString_' . a:hex
-        \ 'contained keepend'
+        \ 'contained keepend oneline'
         \ 'matchgroup=pregDelimiter'
         \ 'start=/\v%x27@<=%x' . a:hex . '/'
-        \ 'skip=/\v\\\\|\\%x' . a:hex . '/'
+        \ 'skip=/\v\\\\\\\\|\\\\[\x' . a:hex . '\\]|\\%x' . a:hex . '|\\%x27/'
         \ 'end=/\%x' . a:hex . '/'
         \ 'contains=pregEscapeDelimiter_' . a:hex
         \ 'nextgroup=pregOptionError'
@@ -1227,7 +1333,7 @@ if ! exists('g:php_show_preg') || g:php_show_preg
       " can only be activated by a nextgroup=pregClassInc_<hex>
       let l:command = l:command
         \ . 'syntax region pregClass<Inc>_<hex>'
-        \ . ' matchgroup=pregClass<Inc> start=/\ze./'
+        \ . ' start=/\ze./'
         \ . ' matchgroup=pregClassParent end=/\]/ skip=/\\]/'
         \ . ' contained display'
         \ . " | "
@@ -1237,16 +1343,26 @@ if ! exists('g:php_show_preg') || g:php_show_preg
       " because otherwise the character class region would end
       " immediately
       let l:command = l:command
+        \ . 'syntax cluster pregClass<Inc>Start_any add=pregClass<Inc>Start_<hex>'
+        \ . " | "
         \ . 'syntax match pregClass<Inc>Start_<hex>'
         \ . ' /\[<circ>\]/ contained display'
         \ . ' containedin=pregString_<hex>'
-        \ . ' nextgroup=pregClass<Inc>_<hex>'
+        \ . ' nextgroup=pregClass<Inc>_<hex>,pregClass<Inc>End'
         \ . ' contains=pregClass<Inc>StartBracket'
         \ . " | "
 
       " link this highlighting too
       let l:command = l:command
         \ . 'hi link pregClass<Inc>Start_<hex> pregClassParent'
+        \ . " | "
+
+      " this is a special match to end off the character class immediately
+      " should a ']' be followed immediately by another ']'
+      let l:command = l:command
+        \ . 'syntax match pregClass<Inc>End /\]/ contained display'
+        \ . " | "
+        \ . 'hi link pregClass<Inc>End pregClassParent'
         \ . " | "
 
       "let l:command = l:command
@@ -1256,7 +1372,7 @@ if ! exists('g:php_show_preg') || g:php_show_preg
       let l:command = l:command
         \ . 'syntax match pregClass<Inc>Range contained display'
         \ . ' containedin=pregClass<Inc>_<hex>,pregClass<Inc>Start_<hex>'
-        \ . ' /\c\v(\\\\\\[\\\x27]|\\x\x{0,2}|\\[^dsw]|[^\\])\-(\\\\\\[\\\x27]|\\x\x{0,2}|\\[^dsw]|[^]\\])/'
+        \ . ' /\c\v%(\\\\\\[\\\x27]=|\\x\x{0,2}|\\\o{1,3}|\\[^dsw]|[^\\])\-%(\\\\\\\\=|\\[^dsw]|[^\]\\])/'
         \ . ' contains=pregClassEscapeDelimiter_<hex>'
         \ . " | "
 
@@ -1298,6 +1414,7 @@ if ! exists('g:php_show_preg') || g:php_show_preg
 
       HiLink pregError Error
       HiLink pregAmbiguous Todo
+      HiLink pregDangerous Error
 
       HiLink pregDelimiter Statement
 
@@ -1309,10 +1426,14 @@ if ! exists('g:php_show_preg') || g:php_show_preg
       HiLink pregEscapeDelimiter pregDelimiter
       HiLink pregEscapeUnknown pregAmbiguous
       HiLink pregEscapeLiteral Comment
+      " TODO: make Dangerous and NotNeeded out to be Error
+      " and Todo respectively, if option is provided
+      HiLink pregEscapeDangerous pregEscapePHP
       HiLink pregEscapeSpecial PreProc
       HiLink pregEscapePHP	Type
       HiLink pregEscapeSingleQuote pregPattern
-      HiLink pregEscapeAmbiguous pregAmbiguous
+
+      HiLink pregEscapeNotNeeded pregEscapePHP
 
       HiLink pregPattern	Normal
       HiLink pregSpecial	Special
