@@ -1,10 +1,10 @@
 " Vim syntax file
 " Language:     php PHP 4/5
 " Maintainer:   Peter Hodge <toomuchphp-vim@yahoo.com>
-" Last Change:  July 21, 2006
+" Last Change:  August 7, 2006
 "
 " URL:      http://www.vim.org/scripts/script.php?script_id=1571
-" Version:  0.9.3
+" Version:  0.9.4
 "
 " ================================================================
 "
@@ -112,7 +112,8 @@
 " before the class or function keyword with the indent of a matching }.
 " Setting php_folding=2 will match all of pairs of {,} ( see known
 " bugs ii )
-
+"
+"
 " Known Bugs:
 "  - setting  php_parent_error_close  on  and  php_parent_error_open  off
 "    has these two leaks:
@@ -130,6 +131,7 @@
 "
 " PRIORITY:
 "   - provide an option to turn off array index colors [0] etc
+"   - fix $obj->property[1] bug
 "
 " PHP Syntax:
 "   - Double-quoted strings should recognize "\x9" as well as "\x09"
@@ -141,13 +143,20 @@
 "   - review support for PHP built-in methods and try to find a better
 "     solution than currently (highlights things like ->setName() in places
 "     where it shouldn't).
+"   - review highlight links to ensure maximum readability on GUI
+"     and color terminal using colorschemes 'elflord' and 'default'
+"   - review some colorschemes available on vim.org, see if better
+"     links can be chosen to provide better portability to other
+"     colorschemes
+"
 "
 " PCRE Syntax:
-"   - fix bug where \\' does not close off the string ...
+"   - fix bug where non-escaped quotes are not highlighted as errors
+"     inside the pattern
 "   - Add support for the paired delimiters <> () [] {}
-"   - Add support for double-quoted strings.
-"   - Add support for multi-line patterns
-"   - review the monster I have created and tidy it up if possible
+"   - Add support for variable substitution inside double-quoted patterns.
+"   - Add support for the 2nd parameter to preg_replace and
+"     highlight "\1" as an error when it is an octal character
 "
 "
 " Future Plans:
@@ -166,6 +175,10 @@
 "   - add support for ereg_* functions
 "
 " ================================================================
+"
+" Note:
+" - syntax case is 'ignore' unless explicitly set to 'match'
+"   for a single item.
 
 " For version 5.x: Clear all syntax items
 " For version 6.x: Quit when a syntax file was already loaded
@@ -223,15 +236,27 @@ if exists( "php_htmlInStrings")
   syn cluster phpAddStrings add=@htmlTop
 endif
 
-syn case match
+" NOTE: syntax case should be 'ignore' for all items (in keeping
+" with PHP's case insensitive behaviour).  If an item MUST be case
+" sensitive, 'syntax case match' should precede that item and
+" 'syntax case ignore' must follow IMMEDIATELY after so that there
+" can be no confusion over the value of 'syntax case' for most items
+" syntax matches and regions may use '\C' to utilize case sensitivity
+syntax case ignore
+
+
 
 " Env Variables
 " TODO: check these against the latest PHP manual
+syn case match
 syn keyword	phpEnvVar	GATEWAY_INTERFACE SERVER_NAME SERVER_SOFTWARE SERVER_PROTOCOL REQUEST_METHOD QUERY_STRING DOCUMENT_ROOT HTTP_ACCEPT HTTP_ACCEPT_CHARSET HTTP_ENCODING HTTP_ACCEPT_LANGUAGE HTTP_CONNECTION HTTP_HOST HTTP_REFERER HTTP_USER_AGENT REMOTE_ADDR REMOTE_PORT SCRIPT_FILENAME SERVER_ADMIN SERVER_PORT SERVER_SIGNATURE PATH_TRANSLATED SCRIPT_NAME REQUEST_URI	contained
+syn case ignore
 
 " Internal Variables
 " TODO: check these against the latest PHP manual
+syn case match
 syn keyword	phpIntVar	GLOBALS PHP_ERRMSG PHP_SELF HTTP_GET_VARS HTTP_POST_VARS HTTP_COOKIE_VARS HTTP_POST_FILES HTTP_ENV_VARS HTTP_SERVER_VARS HTTP_SESSION_VARS HTTP_RAW_POST_DATA HTTP_STATE_VARS _GET _POST _COOKIE _FILES _SERVER _ENV _SERVER _REQUEST _SESSION	contained
+syn case ignore
 
 " Constants
 " Peter Hodge, June 18, 2006
@@ -239,6 +264,7 @@ syn keyword	phpIntVar	GLOBALS PHP_ERRMSG PHP_SELF HTTP_GET_VARS HTTP_POST_VARS H
 "   access to at the moment is my home installation of 5.1.2, so I will add
 "   the ... er ... 626 ... constants harvested from get_defined_constants().
 " TODO: check these against the latest PHP manual
+syn case match
 syn keyword phpCoreConstant contained ASSERT_ACTIVE ASSERT_BAIL ASSERT_CALLBACK ASSERT_QUIET_EVAL ASSERT_WARNING
 syn keyword phpCoreConstant contained CAL_DOW_DAYNO CAL_DOW_LONG CAL_DOW_SHORT CAL_EASTER_ALWAYS_GREGORIAN CAL_EASTER_ALWAYS_JULIAN CAL_EASTER_DEFAULT CAL_EASTER_ROMAN CAL_FRENCH CAL_GREGORIAN CAL_JULIAN CAL_NUM_CALS CAL_JEWISH CAL_JEWISH_ADD_ALAFIM CAL_JEWISH_ADD_ALAFIM_GERESH CAL_JEWISH_ADD_GERESHAYIM CAL_MONTH_FRENCH CAL_MONTH_GREGORIAN_LONG CAL_MONTH_GREGORIAN_SHORT CAL_MONTH_JEWISH CAL_MONTH_JULIAN_LONG CAL_MONTH_JULIAN_SHORT
 syn keyword phpCoreConstant contained CASE_LOWER CASE_UPPER CHAR_MAX
@@ -334,16 +360,18 @@ syn keyword phpCoreConstant contained XML_ERROR_UNCLOSED_TOKEN XML_ERROR_UNDEFIN
 syn keyword phpCoreConstant contained XML_NAMESPACE_DECL_NODE XML_NOTATION_NODE XML_OPTION_CASE_FOLDING XML_OPTION_SKIP_TAGSTART XML_OPTION_SKIP_WHITE XML_OPTION_TARGET_ENCODING
 syn keyword phpCoreConstant contained XML_PI_NODE XML_SAX_IMPL XML_TEXT_NODE
 syn keyword phpCoreConstant contained ZEND_THREAD_SAFE
+syntax case ignore
 
 " Peter Hodge, June 17 2006
 " - changed this from 'phpConstant' to 'phpMagicConstant'
 "   to clarify its contents
-syn keyword	phpMagicConstant	 __LINE__ __FILE__ __FUNCTION__ __METHOD__ __CLASS__	contained
+syntax case match
+syn keyword	phpMagicConstant contained __LINE__ __FILE__ __FUNCTION__ __METHOD__ __CLASS__
+syntax case ignore
 
 
 " Function and Methods ripped from php_manual_de.tar.gz Jan 2003
 " TODO: check these against the latest PHP manual
-syn case ignore
 syn keyword	phpFunctions	apache_child_terminate apache_get_modules apache_get_version apache_getenv apache_lookup_uri apache_note apache_request_headers apache_response_headers apache_setenv ascii2ebcdic ebcdic2ascii getallheaders virtual	contained
 syn keyword	phpFunctions	array_change_key_case array_chunk array_combine array_count_values array_diff_assoc array_diff_uassoc array_diff array_fill array_filter array_flip array_intersect_assoc array_intersect array_key_exists array_keys array_map array_merge_recursive array_merge array_multisort array_pad array_pop array_push array_rand array_reduce array_reverse array_search array_shift array_slice array_splice array_sum array_udiff_assoc array_udiff_uassoc array_udiff array_unique array_unshift array_values array_walk array arsort asort compact count current each end extract in_array key krsort ksort list natcasesort natsort next pos prev range reset rsort shuffle sizeof sort uasort uksort usort	contained
 syn keyword	phpFunctions	aspell_check aspell_new aspell_suggest	contained
@@ -519,7 +547,6 @@ syn match	phpRelation	"!==\="	contained display
 syn match	phpRelation	"<=\="	contained display
 syn match	phpRelation	">=\="	contained display
 if ! exists('php_alt_comparisons') || php_alt_comparisons
-  syntax case ignore
   syntax keyword phpRelation instanceof contained containedin=phpRegion
 endif
 
@@ -540,7 +567,7 @@ syn region phpIdentifierComplex contained display matchgroup=phpParent start="\$
   \ nextgroup=phpIdentifierIndex
 
 " create an identifier match for double-quoted strings:
-syn match phpIdentifierInString "$\h\w*" contained display nextgroup=phpIdentifierIndexInString,phpPropertyInString
+syn match phpIdentifierInString "$\h\w*" contained display nextgroup=phpIdentifierIndexInString
   \ contains=phpEnvVar,phpIntVar,phpVarSelector containedin=@phpStringSubs
 syn region phpIdentifierInStringComplex matchgroup=phpParent start=/{\ze\$/ start=/\${\ze\$/ end=/}/ contained display extend
   \ contains=@phpClInside containedin=@phpStringSubs
@@ -553,12 +580,12 @@ syn match phpIdentifierIndex /\[\d\+\]\|{\d\+}/ contained display contains=phpPa
 hi link phpIdentifierIndexInString phpIdentifierIndex
 
 " Methoden
-syn match phpMethodsVar "->\h\w*" contained display contains=phpMethods,phpMemberSelector nextgroup=phpIdentifierIndex
+syn match phpMethodsVar "->\h\w*" contained display contains=phpMethods,phpMemberSelector
 
 " Peter Hodge - June 25, 2006
 " - trying to fix support for things like
 "   $foo->$bar
-syn match phpMethodsVar /->\$\h\w*/ contained display contains=phpMemberSelector,phpIdentifier nextgroup=phpIdentifierIndex
+syn match phpMethodsVar /->\$\h\w*/ contained display contains=phpMemberSelector,phpIdentifier
 
 " Include
 syn keyword	phpInclude	include require include_once require_once	contained
@@ -668,7 +695,7 @@ else
   syn match phpParent	"[({[\]})]"	contained
 endif
 
-syn cluster	phpClConst	contains=phpFunctions,phpIdentifier,phpIdentifierComplex,phpConditional,phpRepeat,phpStatement,phpOperator,phpRelation,phpStringSingle,phpStringDouble,phpBacktick,phpNumber,phpFloat,phpKeyword,phpType,phpBoolean,phpStructure,phpMethodsVar,phpMemberSelector,phpMagicConstant,phpCoreConstant,phpException
+syn cluster	phpClConst	contains=phpFunctions,phpIdentifier,phpIdentifierComplex,phpConditional,phpRepeat,phpStatement,phpOperator,phpRelation,phpStringSingle,phpStringDouble,phpBacktick,phpNumber,phpFloat,phpKeyword,phpType,phpBoolean,phpStructure,phpMethodsVar,phpMagicConstant,phpCoreConstant,phpException
 syn cluster	phpClInside	contains=@phpClConst,phpComment,phpLabel,phpParent,phpParentError,phpInclude,phpHereDoc
 syn cluster	phpClFunction	contains=@phpClInside,phpDefine,phpParentError,phpStorageClass
 syn cluster	phpClTop	contains=@phpClFunction,phpFoldFunction,phpFoldClass,phpFoldInterface,phpFoldTry,phpFoldCatch
@@ -754,6 +781,10 @@ syn match phpMemberError /->[a-z{_$]\@!/ contained containedin=phpRegion
 "syn match phpStringIdentifier /\c\$\h\w*\(->\h\w*\|->[^ \t\r\n"a-z_]\)\=/ contained display
 "  \ containedin=phpStringDouble,phpHereDoc
 "  \ contains=phpIdentifier,phpMemberSelector
+" Peter Hodge - August 7 2006:
+"   - I don't think these are needed any more
+"syn match phpMethodsVar "->\h\w*" contained contains=phpMethods,phpMemberSelector display
+"syn match phpMethodsVar "->{\@="  contained contains=phpMethods,phpMemberSelector display
 
 " different syntax highlighting for 'echo', 'print', 'switch', 'die' and 'list' keywords
 " to better indicate what they are.
@@ -816,6 +847,8 @@ if exists('php_alt_properties') && g:php_alt_properties
   " differentiate between an object method and an object variable:
   " highlight '->' in a different colour if a method
   " TODO: tidy this up?
+  " Peter Hodge - August 7 2006:
+  " - TODO: check this area again
   syntax cluster phpClInside add=phpPropertySelector
   syntax match phpPropertySelector /->\ze\%(\$\=\w\+\)\@>(\@!/ contained containedin=phpMemberSelector
   syntax match phpPropertySelector /\v\-\>\ze%(\{%([^'"}]|'%(\\'|[^'])*'|"%(\\"|[^"])*")*\})@>\(@!/ contained containedin=phpMemberSelector
@@ -828,7 +861,6 @@ if exists('php_alt_properties') && g:php_alt_properties
 else
   syntax match phpPropertyInString /->\h\w*/ contained contains=phpMemberSelector
 endif
-
 
 if ! exists('php_special_functions') || php_special_functions
   " Highlighting for PHP built-in functions which exhibit special behaviours
@@ -1044,90 +1076,108 @@ if ! exists('g:php_show_preg') || g:php_show_preg
 
     " ===================================================
     " Allow for dropping out of SQ and concatenating a variable ...
-    function! s:FindPregConcat()
-      syntax region pregConcat contained oneline containedin=@pregString_any keepend
-        \ matchgroup=phpQuoteSingle start=/'/ end=/'/
+    function! s:FindPregConcat3()
+      syntax region pregConcat matchgroup=phpQuoteSingle start=/'/ end=/'/
         \ skip=/\['.\{-}'\]\|('.\{-}'[,)]/
+        \ keepend extend
+        \ contained containedin=pregPattern_S
+        \ contains=@phpClInside
+      syntax region pregConcat matchgroup=phpQuoteDouble start=/"/ end=/"/
+        \ skip=/\[".\{-}"\]\|(".\{-}"[,)]/
+        \ keepend extend
+        \ contained containedin=pregPattern_D
         \ contains=@phpClInside
     endfunction
-    call s:FindPregConcat()
+    call s:FindPregConcat3()
 
     " ===================================================
-    function! s:FindPregSpecial()
+    function! s:FindPregSpecial3()
       " look for special characters
-      syntax match pregSpecial /[$^|.]/ contained containedin=@pregString_any display
+      " TODO: re-examine how \$ is going to fit into a double-quoted string ...
+      syntax match pregSpecial /\$/ contained containedin=@pregPattern_Q display
+      syntax match pregSpecial /\^/ contained containedin=@pregPattern_Q display
+      syntax match pregSpecial /|/  contained containedin=@pregPattern_Q display
+      syntax match pregSpecial /\./ contained containedin=@pregPattern_Q display
 
+      " TODO: move these things out of here???
       " find a ] character at the start of a character range ...
-      syntax match pregClassIncStartBracket /\]/ contained display
-      syntax match pregClassExcStartBracket /\]/ contained display
+      syntax match pregClassIncStartBracket /\]/ contained display containedin=@pregClassIncStart_Q
+      syntax match pregClassExcStartBracket /\]/ contained display containedin=@pregClassExcStart_Q
       hi link pregClassIncStartBracket pregClassInc
       hi link pregClassExcStartBracket pregClassExc
-
-      " look for the dash inside a class
-      "syntax match pregSpecial /\v\-&(\[\^?)@<!&.\]@!/ contained containedin=@pregClass_any display
-
-      " look for a character range inside a character class.
-      "	syntax cluster pregClassRange_any add=pregClassIncRange
-      "	syntax match pregClassIncRange /[^\\]-\([^\\\]]\|\\[^\\]\)/ contained containedin=@pregClassInc_any display
-      "	syntax match pregClassIncRange /\\.-\([^\\\]]\|\\[^\\]\)/ contained containedin=@pregClassInc_any display
-      "	syntax match pregClassIncRange /\\.-\([^\\\]]\|\\[^\\]\)/ contained containedin=@pregClassInc_any display
     endfunction
-    call s:FindPregSpecial()
+    call s:FindPregSpecial3()
 
     " ===================================================
-    function! s:FindPregEscape()
+    function! s:FindPregEscape3()
       " look for any escape sequence inside the pattern and mark them as errors
       " by default, all escape sequences are errors
-      syntax match pregEscapeUnknown /\\./ contained containedin=@pregString_any display
+      syntax match pregEscapeUnknown /\\./ contained containedin=@pregPattern_Q display
 
-      syntax cluster pregClass_any add=@pregClassInc_any,@pregClassExc_any
-      syntax cluster pregClassRange_any add=pregClassIncRange,pregClassExcRange
+      " TODO: deprecate things here?
+      " TODO: deprecate pregClass_any
+      syntax cluster pregClass_any add=@pregClassInc,pregClassExc
+      syntax cluster pregClassRange_any_S add=pregClassIncRange_S,pregClassExcRange_S
+      syntax cluster pregClassRange_any_D add=pregClassIncRange_D,pregClassExcRange_D
 
-      syntax match pregClassEscapeUnknown /\\[^\^\-\]]/ contained containedin=@pregClass_any display
-      "syntax match pregClassEscape /\\[\^\-\]]/he=s+1 contained containedin=@pregClass_any display
-      syntax match pregClassEscape /\\[^a-zA-Z0-9]/he=s+1 contained containedin=@pregClass_any display
+      syntax match pregClassEscapeUnknown /\\[^\^\-\]]/ contained containedin=@pregClass_any_Q display
+      syntax match pregClassEscape /\\[^a-zA-Z0-9]/he=s+1 contained containedin=@pregClass_any_Q display
 
       " known escape sequences:
       syntax match pregClassIncEscapeKnown /\C\\[abtnfretdswDSW]/ contained display
-        \ containedin=@pregClassInc_any,pregClassIncRange
+        \ containedin=@pregClassInc_Q,@pregClassIncRange_Q
       syntax match pregClassExcEscapeKnown /\C\\[abtnfretdswDSW]/ contained display
-        \ containedin=@pregClassExc_any,pregClassExcRange
+        \ containedin=@pregClassExc_Q,@pregClassExcRange_Q
 
       " ... including hex sequences
       syntax match pregClassIncEscapeKnown /\C\\x\x\{0,2}/ contained display
-        \ containedin=@pregClassInc_any,pregClassIncRange
+        \ containedin=@pregClassInc_Q,@pregClassIncRange_Q
       syntax match pregClassExcEscapeKnown /\C\\x\x\{0,2}/ contained display
-        \ containedin=@pregClassExc_any,pregClassExcRange
+        \ containedin=@pregClassExc_Q,@pregClassExcRange_Q
 
       " ... and octal sequences
       syntax match pregClassIncEscapeKnown /\\\o\{1,3}/ contained display
-        \ containedin=@pregClassInc_any,pregClassIncRange
+        \ containedin=@pregClassInc_Q,@pregClassIncRange_Q
       syntax match pregClassExcEscapeKnown /\\\o\{1,3}/ contained display
-        \ containedin=@pregClassExc_any,pregClassExcRange
+        \ containedin=@pregClassExc_Q,@pregClassExcRange_Q
 
-      syntax match pregClassEscapeSingleQuote /\\'/ contained transparent display
-        \ containedin=@pregClass_any,@pregClassRange_any
-        \ contains=pregEscapePHP 
+      syntax match pregClassEscapeMainQuote /\\'/ contained transparent display contains=pregEscapePHP 
+        \ containedin=@pregClass_any_S,@pregClassRange_any_S
+      syntax match pregClassEscapeMainQuote /\\"/ contained transparent display contains=pregEscapePHP 
+        \ containedin=@pregClass_any_D,@pregClassRange_any_D
 
-      syntax match pregClassEscape /\\\\\%(\\'\)\@=/ contained display
-        \ containedin=@pregClass_any
-        \ contains=pregEscapePHP
-        \ nextgroup=pregClassEscapeSingleQuote
+      syntax match pregClassEscape /\\\\\ze\\'/ contained display
+        \ containedin=@pregClass_any_S contains=pregEscapePHP
+        \ nextgroup=pregClassEscapeMainQuote
+      syntax match pregClassEscape /\\\\\ze\\"/ contained display
+        \ containedin=@pregClass_any_D contains=pregEscapePHP
+        \ nextgroup=pregClassEscapeMainQuote
 
-      syntax match pregClassEscapeDouble1 /\\\\\(\\\\\)\@=/ contained containedin=@pregClass_any display
+      syntax match pregClassEscapeDouble1 /\\\\\ze\\\\/ contained containedin=@pregClass_any_Q display
         \ contains=pregEscapePHP
         \ nextgroup=pregClassEscapeDouble2
       syntax match pregClassEscapeDouble2 /\\\\/ contained transparent display
-        \ containedin=@pregClassRange_any
+        \ containedin=@pregClassRange_any_S,@pregClassRange_any_D
         \ contains=pregEscapePHP
       hi link pregClassEscapeDouble1 pregClassEscape
 
       " in the unknown escapes, match those that make a special character
       " take on its literal meaning (except for <single-quote> which is covered next)
-      syntax match pregEscapeLiteral /\\[^A-Za-z0-9']/ contained containedin=pregEscapeUnknown display
-      syntax match pregEscapeLiteral /\\\\\\[\\']/ contained containedin=pregEscapeUnknown display
+      " NOTE: am changing these from being contained inside pregEscapeUnknown
+      " to being in the main scope to make SQ and DQ containment easier
+      syntax match pregEscapeLiteral /\\[^A-Za-z0-9]/ contained containedin=@pregPattern_Q display
+      syntax match pregEscapeLiteral /\\\{4}/ contained containedin=@pregPattern_Q display
 
-      syntax match pregEscapeSingleQuote /\\'/ contained containedin=pregEscapeUnknown display
+      " for single-quoted strings
+      syntax match pregEscapeLiteral /\\"/ contained containedin=pregPattern_S display
+      syntax match pregEscapeLiteral /\\\\\\'/ contained containedin=pregPattern_S display contains=pregEscapePHP
+
+      " for double-quoted strings
+      syntax match pregEscapeLiteral /\\'/ contained containedin=pregPattern_D display
+      syntax match pregEscapeLiteral /\\\\\\"/ contained containedin=pregPattern_D display contains=pregEscapePHP
+
+      syntax match pregEscapeMainQuote /\\'/ contained containedin=pregPattern_S display
+      syntax match pregEscapeMainQuote /\\"/ contained containedin=pregPattern_D display
 
       " match the escaped strings which are known
       syntax match pregBackreference /\\[1-9][0-9]\=/ contained containedin=pregEscapeUnknown display
@@ -1136,64 +1186,61 @@ if ! exists('g:php_show_preg') || g:php_show_preg
       syntax match pregEscapeSpecial /\\\%(0\o\{0,2}\|\o\o\o\)/ contained containedin=pregEscapeUnknown display
 
       " match the PHP escaping in literal escapes
-      syntax match pregEscapePHP /\\[\\']/he=s+1 contained display
-              \ containedin=pregEscapeLiteral,pregEscapeSingleQuote
-      "syntax match pregEscapeSuperMatch /\\'/ transparent containedin=pregEscapeLiteral contains=pregEscapeSuper
-      "syntax match pregEscapeSuper /\\./he=s+1 containedin=pregEscapeSuperMatch
-
-      " these can be found inside super-escapes and give the escaped
-      " characer the correct colour
+      syntax match pregEscapePHP /\\./he=s+1 contained display containedin=pregEscapeMainQuote
+      syntax match pregEscapePHP /\\\\/he=s+1 contained display containedin=pregEscapeLiteral
 
       " this captures confusing usage of escape characters
-      syntax match pregEscapeNotNeeded /\\\(\\[^\\]\)\@=/ contained display
-        \ containedin=@pregString_any,@pregClass_any
+      syntax match pregEscapeNotNeeded /\\\ze\\[^\\]/ contained display
+        \ containedin=@pregPattern_Q,@pregClass_any_Q
 
       " a triple-backslash can be dangerous: it is not obvious that
       " the meaning of the 3rd backslash is dependent on the following
       " character; if the following character is changed to a
       " single-quote or backslash, it will change the meaning of the 3
       " backslashes
-      syntax match pregEscapeLiteral /\\\\\\\%([\\']\)\@!/ contained display containedin=@pregString_any
-      syntax match pregClassEscape /\\\\\\\%([\\']\)\@!/he=e-1 contained display containedin=@pregClass_any
-        \ contains=pregEscapePHP
-        "\ nextgroup=pregEscapeDangerousPart2
-      "syntax match pregEscapeDangerousPart2 /\\\\/ contained display
-      "hi link pregEscapeDangerousPart2 pregEscapeLiteral
+      syntax match pregEscapeLiteral /\\\\\\\ze[^\\']/ contained display containedin=pregPattern_S
+      syntax match pregEscapeLiteral /\\\\\\\ze[^\\"]/ contained display containedin=pregPattern_D
+      syntax match pregClassEscape /\\\\\\\ze[^\\']/he=e-1 contained display contains=pregClassEscapePHP containedin=@pregClass_any_S
+      syntax match pregClassEscape /\\\\\\\ze[^\\"]/he=e-1 contained display contains=pregClassEscapePHP containedin=@pregClass_any_D
+      syntax match pregClassEscapePHP /\\\\/he=s+1 contained
+      hi link pregClassEscapePHP  pregEscapePHP
     endfunction
-    call s:FindPregEscape()
+    call s:FindPregEscape3()
 
     " ===================================================
-    function! s:FindPregQuantifiers()
-      syntax match pregQuantifier /[*+?]?\?/ contained containedin=@pregString_any display
-      syntax match pregQuantifierComplex /{\d*\(,\d*\)\?}/ contained containedin=@pregString_any display
+    function! s:FindPregQuantifiers3()
+      syntax match pregQuantifier /\*?\=/ contained containedin=@pregPattern_Q display
+      syntax match pregQuantifier /+?\=/  contained containedin=@pregPattern_Q display
+      syntax match pregQuantifier /??\=/  contained containedin=@pregPattern_Q display
+
+      syntax match pregQuantifierComplex /{\d*\(,\d*\)\?}/ contained containedin=@pregPattern_Q display
       syntax match pregQuantifier /\d\+/ contained containedin=pregQuantifierComplex display
     endfunction
-    call s:FindPregQuantifiers()
+    call s:FindPregQuantifiers3()
 
     " ===================================================
-    function! s:FindPregParens()
-      syntax match pregParens /(/ contained containedin=@pregString_any display
-      syntax match pregParens /(?\%(<[=!]\||R\|[:>=!]\|(?=\)/ contained containedin=@pregString_any display
-      syntax match pregParens /(?(\d\+)/ contained containedin=@pregString_any display
+    function! s:FindPregParens3()
+      syntax match pregParens /(/ contained containedin=@pregPattern_Q display
+      syntax match pregParens /(?\%(<[=!]\|R\|[:>=!]\|(?=\)/ contained containedin=@pregPattern_Q display extend
+      syntax match pregParens /(?(\d\+)/ contained containedin=@pregPattern_Q display
         \ contains=pregBackreferenceNumber
       syntax match pregBackreferenceNumber /\d\+/ contained display
+      " TODO: move hi link out of here?
       hi link pregBackreferenceNumber pregBackreference
-      syntax match pregParens /(?\a\+\(-\a\+\)\=[):]/ contained containedin=@pregString_any display
+      syntax match pregParens /(?\a\+\(-\a\+\)\=[):]/ contained containedin=@pregPattern_Q display
         \ contains=pregOption
-      syntax match pregParens /(?-\a\+[):]/ contained containedin=@pregString_any display
+      syntax match pregParens /(?-\a\+[):]/ contained containedin=@pregPattern_Q display
         \ contains=pregOption
-      syntax match pregParens /)/ contained containedin=@pregString_any display
+      syntax match pregParens /)/ contained containedin=@pregPattern_Q display
     endfunction
-    call s:FindPregParens()
+    call s:FindPregParens3()
 
     " ===================================================
-    function! s:FindPregStrings()
-      syntax case ignore
-
+    function! s:FindPregStrings3()
       " look for preg_* functions which take a single pattern
       syntax keyword phpPREGFunctions contained containedin=phpParent,phpRegion
         \ nextgroup=phpPREGOpenParent
-        \ preg_match preg_split preg_match_all preg_grep
+        \ preg_match preg_match_all preg_split preg_grep
 
       " special case for preg_replace functions which can take an array
       " of patterns
@@ -1202,215 +1249,198 @@ if ! exists('g:php_show_preg') || g:php_show_preg
         \ preg_replace preg_replace_callback
 
       " highlight the opening parenthesis (just because I have to)
-      syntax match phpPREGOpenParent "(" contained nextgroup=phpPREGStringSingle display
-      syntax match phpPREGReplaceOpenParent "(" contained display
-        \ nextgroup=phpPREGStringSingle,phpPREGArray skipwhite skipnl skipempty
+      syntax match phpPREGOpenParent /(/ contained
+        \ nextgroup=@phpPREGString_any
+        \ display
+      syntax match phpPREGReplaceOpenParent /(/ contained display
+        \ nextgroup=@phpPREGString_any,phpPREGArray skipwhite skipnl skipempty
       hi link phpPREGReplaceOpenParent phpPREGOpenParent
 
+      " TODO: move 'hi link' commands out of here
       " match an array of preg patterns
       syntax keyword phpPREGArray array contained nextgroup=phpPREGArrayOpenParent
       hi link phpPREGArray phpType
-      syntax match phpPREGArrayOpenParent "(" contained display
-        \ nextgroup=phpPREGArrayStringSingle skipwhite skipnl skipempty
+      syntax match phpPREGArrayOpenParent /(/ contained display
+        \ nextgroup=@phpPREGArrayString_any skipwhite skipnl skipempty
       hi link phpPREGArrayOpenParent phpPREGOpenParent
 
-      " match a phpString (single-quoted) which is able to contain a pregString_any
-      " NOTE: have just removed the 'keepend' which was to stop things going
-      " crazy when the ending delimiter is missing, now we should be able to
-      " create a match to extend the preg string
-      " NOTE: have added a 'oneline' option to prevent things going more crazy
-      syntax region phpPREGStringSingle matchgroup=phpQuoteSingle start=+'+ end=+'+
-        \ skip=+\\\\\|\\'+
-        \ contained display extend
-        \ contains=@pregString_any
+      " match a phpString (single or double-quoted) which is able to contain a
+      " pregPattern
+      " NOTE: the 'extend' option is necessary to prevent '?>' inside the pattern
+      " from ending the phpRegion
+      syntax cluster phpPREGString_any add=phpPREGStringSingle,phpPREGStringDouble
+      syntax region phpPREGStringSingle matchgroup=phpQuoteSingle start=/'/ end=/'/
+        \ keepend extend contained contains=pregPattern_S
+      syntax region phpPREGStringDouble matchgroup=phpQuoteSingle start=/"/ end=/"/
+        \ keepend extend contained contains=pregPattern_D
 
       " match a single-quoted string inside an array, followed by a comma
       " and another string
-      syntax region phpPREGArrayStringSingle contained display extend keepend
-        \ matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+
-        \ contains=@pregString_any
+      " TODO: remove hi link commands from here
+      syntax cluster phpPREGArrayString_any add=phpPREGArrayStringSingle,phpPREGArrayStringDouble
+      syntax region phpPREGArrayStringSingle matchgroup=phpQuoteSingle start=/'/ end=/'/
+        \ keepend extend contained contains=pregPattern_S
         \ nextgroup=phpPREGArrayComma skipwhite skipnl skipempty
       hi link phpPREGArrayStringSingle phpPREGStringSingle
+      syntax region phpPREGArrayStringDouble matchgroup=phpQuoteDouble start=/"/ end=/"/
+        \ keepend extend contained contains=pregPattern_D
+        \ nextgroup=phpPREGArrayComma skipwhite skipnl skipempty
+      hi link phpPREGArrayStringDouble phpPREGStringDouble
 
-      syntax match phpPREGArrayComma /,/ contained display
-       \ nextgroup=phpPREGArrayStringSingle skipwhite skipnl skipempty
+      syntax match phpPREGArrayComma /,/ contained
+       \ nextgroup=@phpPREGArrayString_any skipwhite skipnl skipempty
 
     endfunction
-    call s:FindPregStrings()
+    call s:FindPregStrings3()
 
     " ===================================================
-    function! s:FindPregDelimiter()
-      call s:FindPregDelimiter_hex('20') " <- space!
-      call s:FindPregDelimiter_hex('21')
-      call s:FindPregDelimiter_hex('22') " <- double-quote
-      call s:FindPregDelimiter_hex('23')
-      call s:FindPregDelimiter_hex('24')
-      call s:FindPregDelimiter_hex('25')
-      call s:FindPregDelimiter_hex('26')
-      "call s:FindPregDelimiter_hex('27') " <- single-quote
-      "call s:FindPregDelimiter_hex('28')
-      "call s:FindPregDelimiter_hex('29')
-      call s:FindPregDelimiter_hex('2a')
-      call s:FindPregDelimiter_hex('2b')
-      call s:FindPregDelimiter_hex('2c')
-      call s:FindPregDelimiter_hex('2d')
-      call s:FindPregDelimiter_hex('2e')
-      call s:FindPregDelimiter_hex('2f')
+    function! s:FindPregDelimiter3()
+      syntax cluster pregPattern_Q add=pregPattern_S,pregPattern_D
 
-      call s:FindPregDelimiter_hex('3a')
-      call s:FindPregDelimiter_hex('3b')
-      "call s:FindPregDelimiter_hex('3c') " <- <less-than> symbol: '<'
-      call s:FindPregDelimiter_hex('3d')
-      "call s:FindPregDelimiter_hex('3e') " <- <greater-than> symbol: '>'
-      call s:FindPregDelimiter_hex('3f')
-      call s:FindPregDelimiter_hex('40')
+      " add a region which starts with any valid delimiter character
+      " and ends when the delimiter character is met again
+      syntax region pregPattern_S matchgroup=pregDelimiter
+        \ start=/\z([ !"#$%&*+,-./:;=?@^_`|~]\)/ start=/\z(\\'\)/
+        \ end=/\z1/ skip=/\\\\\{2,3}\|\\\\\z1\=\|\\\z1/
+        \ keepend extend
+        \ contained nextgroup=pregOptionError_S
 
-      "call s:FindPregDelimiter_hex('5b') " <- <left-bracket> symbol: [
-      "call s:FindPregDelimiter_hex('5d') " <- <right-bracket> symbol: ]
-      call s:FindPregDelimiter_hex('5e')
-      call s:FindPregDelimiter_hex('5f')
-      call s:FindPregDelimiter_hex('60')
+      syntax region pregPattern_D matchgroup=pregDelimiter
+        \ start=/\z([ !'#$%&*+,-./:;=?@^_`|~]\)/ start=/\z(\\"\)/
+        \ end=/\z1/ skip=/\\\\\{2,3}\|\\\\\z1\=\|\\\z1/
+        \ keepend extend
+        \ contained nextgroup=pregOptionError_D
 
-      call s:FindPregDelimiter_hex('7c')
-      call s:FindPregDelimiter_hex('7e')
-
-      syntax match pregEscapeDelimiter /\\./he=s+1 contained containedin=@pregEscapeDelimiter_any display
+      " TODO move hi link out of here
+      hi link pregPattern_S pregPattern
+      hi link pregPattern_D pregPattern
     endfunction
-    function! s:FindPregDelimiter_hex(hex)
-      execute 'syntax cluster pregString_any add=pregString_' . a:hex
-      " NOTE: have added 'oneline' option to stop things going crazy when
-      " ending delimiter is missing
-      execute 'syntax region pregString_' . a:hex
-        \ 'contained keepend oneline'
-        \ 'matchgroup=pregDelimiter'
-        \ 'start=/\v%x27@<=%x' . a:hex . '/'
-        \ 'skip=/\v\\\\\\\\|\\\\[\x' . a:hex . '\\]|\\%x' . a:hex . '|\\%x27/'
-        \ 'end=/\%x' . a:hex . '/'
-        \ 'contains=pregEscapeDelimiter_' . a:hex
-        \ 'nextgroup=pregOptionError'
-      execute 'hi link pregString_' . a:hex . ' pregPattern'
+    call s:FindPregDelimiter3()
 
-      " match for the escaped delimiter
-      execute 'syntax cluster pregEscapeDelimiter_any add=pregEscapeDelimiter_' . a:hex
-      execute 'syntax match pregEscapeDelimiter_' . a:hex . ' /\\\%x' . a:hex . '/'
-        \ 'display contained containedin=pregString_' . a:hex
-      execute 'hi link pregEscapeDelimiter_' . a:hex . ' pregEscapeLiteral'
+    function! s:FindPregClasses3()
+      " Inc[lusive] and Exc[lusive] character classes:
+      "  if the first char is ']'
+      " that is tricky so is handled by another match below
+      syntax cluster pregClassInc_Q add=pregClassInc_S,pregClassInc_D
+      syntax cluster pregClassExc_Q add=pregClassExc_S,pregClassExc_D
+      syntax cluster pregClass_any_S add=pregClassInc_S,pregClassExc_S
+      syntax cluster pregClass_any_D add=pregClassInc_D,pregClassExc_D
+      syntax cluster pregClass_any_Q add=@pregClassInc_Q,@pregClassExc_Q
 
-      " add a match for the escaped delimiter inside a character class
-      execute 'syntax match pregClassEscapeDelimiter_' . a:hex
-        \ '/\\\%x' . a:hex . '/he=s+1'
-        \ 'contained containedin=pregClassInc_' . a:hex . ',pregClassExc_' . a:hex
-        \ 'contains=pregEscapeDelimiter display'
+      syntax region pregClassInc_S matchgroup=pregClassParent start=/\[\ze[^\^\]]/ end=/\]/ skip=/\\\\\|\\\]/
+        \ display contained containedin=pregPattern_S
+      syntax region pregClassInc_D matchgroup=pregClassParent start=/\[\ze[^\^\]]/ end=/\]/ skip=/\\\\\|\\\]/
+        \ display contained containedin=pregPattern_D
+      " TODO: move these out of here???
+      hi link pregClassInc_S pregClassInc
+      hi link pregClassInc_D pregClassInc
+      hi link pregClassExc_S pregClassExc
+      hi link pregClassExc_D pregClassExc
 
-      " add a match group for the class sets (Inclusive or Exclusive)
-      call s:FindPregDelimiterClass_hex(a:hex, 'Inc', '\\^\\@!')
-      call s:FindPregDelimiterClass_hex(a:hex, 'Exc', '\\^')
-    endfunction
-    function! s:FindPregDelimiterClass_hex(hex, type, circ)
-      " add this hex's pregClassInc to the cluster of all
-      " pregClassInc matches so that all sub-items can be
-      " containedin=@pregClassInc_any
-      let l:command = ''
-        \ . 'syntax cluster pregClass<Inc>_any add=pregClass<Inc>_<hex>'
-        \ . " | "
+      syntax region pregClassExc_S matchgroup=pregClassParent start=/\[\^\]\@!/ end=/\]/ skip=/\\\\\|\\\]/
+        \ display contained containedin=pregPattern_S
+      syntax region pregClassExc_D matchgroup=pregClassParent start=/\[\^\]\@!/ end=/\]/ skip=/\\\\\|\\\]/
+        \ display contained containedin=pregPattern_D
 
-      " add a region which will define a character class for this
-      " hex, contained only in this pregString_<hex>
-      let l:command = l:command
-        \ . 'syntax region pregClass<Inc>_<hex>'
-        \ . ' matchgroup=pregClassParent start=/\[<circ>\ze\]\@!/ end=/\]/ skip=/\\\\\|\\\]/'
-        \ . ' contained containedin=pregString_<hex>'
-        \ . ' display oneline'
-        \ . " | "
+      " TODO: move hi link commands out of here
 
-      " give pregClassInc_<hex> same highlighting as pregClassInc
-      let l:command = l:command
-        \ . 'hi link pregClass<Inc>_<hex> pregClass<Inc>'
-        \ . " | "
-
-      " this is an alternate form of the character class region for
-      " this hex, but it is not contained in pregString_<hex> and
-      " can only be activated by a nextgroup=pregClassInc_<hex>
-      let l:command = l:command
-        \ . 'syntax region pregClass<Inc>_<hex>'
-        \ . ' start=/\ze./'
-        \ . ' matchgroup=pregClassParent end=/\]/ skip=/\\]/'
-        \ . ' contained display'
-        \ . " | "
+      " this is an alternate form of the character class region,
+      " it is not contained in @pregPattern_Q and can only be activated
+      " by a nextgroup=pregClassInc.
+      " 'EXECUTE'ed:
+      "syntax region pregClassInc_S start=/\ze./ matchgroup=pregClassParent end=/\]/ skip=/\\\\\|\\]/ contained display
+      "syntax region pregClassInc_D start=/\ze./ matchgroup=pregClassParent end=/\]/ skip=/\\\\\|\\]/ contained display
+      "syntax region pregClassExc_S start=/\ze./ matchgroup=pregClassParent end=/\]/ skip=/\\\\\|\\]/ contained display
+      "syntax region pregClassExc_D start=/\ze./ matchgroup=pregClassParent end=/\]/ skip=/\\\\\|\\]/ contained display
+      let l:command = 'syntax region pregClass<TYPE> start=/\ze./ matchgroup=pregClassParent end=/\]/'
+        \ . ' skip=/\\\\\|\\]/ contained display'
+      execute substitute(l:command, '<TYPE>', 'Inc_S', 'g')
+      execute substitute(l:command, '<TYPE>', 'Inc_D', 'g')
+      execute substitute(l:command, '<TYPE>', 'Exc_S', 'g')
+      execute substitute(l:command, '<TYPE>', 'Exc_D', 'g')
 
       " this is a special match to start off the character class
       " region when the very first character inside it is ']',
       " because otherwise the character class region would end
       " immediately
-      let l:command = l:command
-        \ . 'syntax cluster pregClass<Inc>Start_any add=pregClass<Inc>Start_<hex>'
-        \ . " | "
-        \ . 'syntax match pregClass<Inc>Start_<hex>'
-        \ . ' /\[<circ>\]/ contained display'
-        \ . ' containedin=pregString_<hex>'
-        \ . ' nextgroup=pregClass<Inc>_<hex>,pregClass<Inc>End'
-        \ . ' contains=pregClass<Inc>StartBracket'
-        \ . " | "
+      syntax cluster pregClassIncStart_Q add=pregClassIncStart_S,pregClassIncStart_D
+      syntax cluster pregClassExcStart_Q add=pregClassExcStart_S,pregClassExcStart_D
+      let l:command = 'syntax match pregClassIncStart_<QUOTE> /\[\]/ contained display'
+        \ . ' containedin=pregPattern_<QUOTE> nextgroup=pregClassInc_<QUOTE>,pregClassIncEnd'
+      execute substitute(l:command, '<QUOTE>', 'S', 'g')
+      execute substitute(l:command, '<QUOTE>', 'D', 'g')
+      let l:command = 'syntax match pregClassExcStart_<QUOTE> /\[\^\]/ contained display'
+        \ . ' containedin=pregPattern_<QUOTE> nextgroup=pregClassExc_<QUOTE>,pregClassExcEnd'
+      execute substitute(l:command, '<QUOTE>', 'S', 'g')
+      execute substitute(l:command, '<QUOTE>', 'D', 'g')
 
-      " link this highlighting too
-      let l:command = l:command
-        \ . 'hi link pregClass<Inc>Start_<hex> pregClassParent'
-        \ . " | "
+      " TODO: move hi link commands out of here
+      hi link pregClassIncStart_S pregClassParent
+      hi link pregClassIncStart_D pregClassParent
+      hi link pregClassExcStart_S pregClassParent
+      hi link pregClassExcStart_D pregClassParent
 
       " this is a special match to end off the character class immediately
       " should a ']' be followed immediately by another ']'
-      let l:command = l:command
-        \ . 'syntax match pregClass<Inc>End /\]/ contained display'
-        \ . " | "
-        \ . 'hi link pregClass<Inc>End pregClassParent'
-        \ . " | "
-
-      "let l:command = l:command
+      " TODO: move hi link commands out of here
+      syntax match pregClassIncEnd /\]/ contained display
+      hi link pregClassIncEnd pregClassParent
+      syntax match pregClassExcEnd /\]/ contained display
+      hi link pregClassExcEnd pregClassParent
 
       " add the range-matching string here
-"     let l:rangeEnd = '(\\\\\\[\\\x27]|\\x\x{0,2}|\\[^dsw]|[^\\])'
-      let l:command = l:command
-        \ . 'syntax match pregClass<Inc>Range contained display'
-        \ . ' containedin=pregClass<Inc>_<hex>,pregClass<Inc>Start_<hex>'
-        \ . ' /\c\v%(\\\\\\[\\\x27]=|\\x\x{0,2}|\\\o{1,3}|\\[^dsw]|[^\\])\-%(\\\\\\\\=|\\[^dsw]|[^\]\\])/'
-        \ . ' contains=pregClassEscapeDelimiter_<hex>'
-        \ . " | "
-
-      " perform substitutions on l:command, then execute
-      let l:command = substitute(l:command, '<hex>', a:hex, 'g')
-      let l:command = substitute(l:command, '<circ>', a:circ, 'g')
-      let l:command = substitute(l:command, '<Inc>', a:type, 'g')
-      execute l:command
+      syntax cluster pregClassIncRange_Q add=pregClassIncRange_S,pregClassIncRange_D
+      syntax cluster pregClassExcRange_Q add=pregClassExcRange_S,pregClassExcRange_D
+      syntax match pregClassIncRange_S contained display
+        \ containedin=pregClassInc_S,pregClassIncStart_S
+        \ /\%([^\\]\|\\\%(\\\{2}[\\']\=\|x\x\{0,2}\|\o\{1,3}\|[^dsw]\)\)-\%(\\\{3,4}\|\\[^dsw]\|[^\\\]]\)/
+      syntax match pregClassIncRange_D contained display
+        \ containedin=pregClassInc_D,pregClassIncStart_D
+        \ /\%([^\\]\|\\\%(\\\{2}[\\"]\=\|x\x\{0,2}\|\o\{1,3}\|[^dsw]\)\)-\%(\\\{3,4}\|\\[^dsw]\|[^\\\]]\)/
+      syntax match pregClassExcRange_S contained display
+        \ containedin=pregClassExc_S,pregClassExcStart_S
+        \ /\%([^\\]\|\\\%(\\\{2}[\\']\=\|x\x\{0,2}\|\o\{1,3}\|[^dsw]\)\)-\%(\\\{3,4}\|\\[^dsw]\|[^\\\]]\)/
+      syntax match pregClassExcRange_D contained display
+        \ containedin=pregClassExc_D,pregClassExcStart_D
+        \ /\%([^\\]\|\\\%(\\\{2}[\\']\=\|x\x\{0,2}\|\o\{1,3}\|[^dsw]\)\)-\%(\\\{3,4}\|\\[^dsw]\|[^\\\]]\)/
+      hi link pregClassIncRange_S pregClassIncRange
+      hi link pregClassIncRange_D pregClassIncRange
+      hi link pregClassExcRange_S pregClassExcRange
+      hi link pregClassExcRange_D pregClassExcRange
     endfunction
-
-    call s:FindPregDelimiter()
+    call s:FindPregClasses3()
 
     " ===================================================
-    function! s:FindPregOptions()
+    function! s:FindPregOptions3()
       " highlight options
-      syntax match pregOptionError /[^']*/ contained contains=pregOption display
+      " TODO: make a single-quote and double-quote version of these
+      " to make sure it works as well as possible
+      syntax match pregOptionError_S /\%(\\[\\']\|[^']\)\+/ contained contains=pregOption display
+      syntax match pregOptionError_D /\%(\\[\\"]\|[^"]\)\+/ contained contains=pregOption display
       syntax match pregOption /\C[eimsuxADSUX]\+/ contained display
+      " TODO: move hi links out of here?
+      hi link pregOptionError_S pregOptionError
+      hi link pregOptionError_D pregOptionError
     endfunction
-    call s:FindPregOptions()
+    call s:FindPregOptions3()
 
     " ===================================================
-    function! s:FindPregComments()
-      syntax match pregComment /\v\(\?\#[^)]*\)/ contained containedin=@pregString_any
+    function! s:FindPregComments3()
+      syntax match pregComment /\v\(\?\#[^)]*\)/ contained containedin=@pregPattern_Q
 
-      " multi-line comments must be turned on explicitly
-      " TODO: come up with a unified approach to handling
-      " multi-line expressions
-      "syntax match pregComment /\v\#(.*)@>/ contained containedin=@pregString_any
+      " TODO: multi-line comments must be turned on explicitly!
+      " syntax match pregComment /\v\#(.*)@>/ contained containedin=@pregPattern_Q
     endfunction
-    call s:FindPregComments()
+    call s:FindPregComments3()
 
     " ===================================================
-    function! s:HiLinks()
+    function! s:HiLinks2()
       command -nargs=+ HiLink hi link <args>
 
       HiLink phpPREGFunctions phpFunctions
       HiLink phpPREGOpenParent phpParent
       HiLink phpPREGStringSingle phpStringSingle
+      HiLink phpPREGStringDouble phpStringDouble
 
       HiLink pregError Error
       HiLink pregAmbiguous Todo
@@ -1431,7 +1461,6 @@ if ! exists('g:php_show_preg') || g:php_show_preg
       HiLink pregEscapeDangerous pregEscapePHP
       HiLink pregEscapeSpecial PreProc
       HiLink pregEscapePHP	Type
-      HiLink pregEscapeSingleQuote pregPattern
 
       HiLink pregEscapeNotNeeded pregEscapePHP
 
@@ -1456,7 +1485,7 @@ if ! exists('g:php_show_preg') || g:php_show_preg
 
       delcommand HiLink
     endfunction
-    call s:HiLinks()
+    call s:HiLinks2()
   endfunction
   call s:PHPPregSyntax()
 endif
@@ -1469,4 +1498,4 @@ if main_syntax == 'php'
   unlet main_syntax
 endif
 
-" vim: ts=8 sw=2 sts=2 expandtab
+" vim: ts=2 sw=2 sts=2 expandtab
