@@ -1,36 +1,28 @@
 " Vim syntax file
 " Language:     PHP 4/5
 " Maintainer:   Peter Hodge <toomuchphp-vim@yahoo.com>
-" Last Change:  October 24, 2006
+" Last Change:  October 27, 2006
 "
 " URL:      http://www.vim.org/scripts/script.php?script_id=1571
-" Version:  0.9.5
+" Version:  0.9.6
 "
 " ================================================================
 "
 " Note: If you are having speed issues loading or editting PHP files, try
-"       disabling some of these options:
+"       disabling some of the options.  In your .vimrc, try adding:
 "         :let php_folding = 0
-"         :let php_nested_functions = 0
 "         :let php_strict_blocks = 0
 "
 " ================================================================
 "
 " Note: If you are using a colour terminal with dark background, you will
 "       probably find the 'elflord' colorscheme is well suited to PHP syntax
-"       because of the way it highlights the flow-control statemts in your
+"       because of the way it highlights the flow-control statements in your
 "       code.
 "
 " ================================================================
 "
 " OPTIONS:
-"
-"    Note: All options can be set globally or on a per-file basis by using
-"          global or buffer local variables.  For example, you could turn on SQL
-"          highlighting globally in your .vimrc:
-"            let g:php_sql_query = 1
-"          but then turn it off in only one buffer (one open file):
-"            let b:php_sql_query = 0
 "
 "    Note: Many of these default to 1 (On), so you would need to set
 "	       them to 0 to turn them off. E.g., in your .vimrc file:
@@ -39,6 +31,13 @@
 "            let php_alt_comparisons = 0
 "            etc.
 "          If the variables do not exist, the default value will be used.
+"
+"    Note: All options can be set globally or on a per-file basis by using
+"          global or buffer local variables.  For example, you could turn on SQL
+"          highlighting globally in your .vimrc:
+"            let g:php_sql_query = 1
+"          but then turn it off in only one buffer (one open file):
+"            let b:php_sql_query = 0
 "
 "
 "   -- PHP FEATURES --
@@ -101,17 +100,7 @@
 "                 to preg_match(), preg_replace, etc.
 "
 "
-"   -- OTHER OPTIONS --
-"
-"         let php_strict_blocks = 1/0  [default 1]
-"             ... to match together all {} () and [] blocks correctly. This
-"                 can help you find problems with mismatched parenthesis.
-"
-"         let php_asp_tags = 1/0  [default 0]
-"             ... for highlighting ASP-style short tags
-"
-"         let php_noShortTags = 1/0  [default 0]
-"             ... don't sync <? ?> as php
+"   -- FINDING ERRORS --
 "
 "         let php_parent_error_close = 1/0  [default 1]
 "             ... for highlighting parent error ] or ) or }
@@ -124,6 +113,36 @@
 "                 php_strict_blocks is disabled).
 "               * requires php_strict_blocks
 "
+"         let php_empty_construct_error = 0/1  [default 1]
+"             ... highlights ';' as an error if it comes immediately after
+"                 an if/else/while/for/foreach/switch statement (the
+"                 logical constructs should have a body).
+"               * requires php_strict_blocks
+"
+"         let php_nested_functions = 0/1  [default 0]
+"             ... Whether or not to allow contiaining one function inside
+"                 another.  This option is mostly for speeding up syntax
+"                 highlighting - { } blocks can by inserted much faster while
+"                 editting a large class.
+"                 Note: this is the only option which might break valid PHP
+"                 code, although only if you define one function inside
+"                 another, which is useually discouraged.
+"               * irrelevent without php_strict_blocks
+"
+"   -- OTHER OPTIONS --
+"
+"         let php_strict_blocks = 1/0  [default 1]
+"             ... to match together all {} () and [] blocks correctly. This is
+"                 required by some of the other options for find errors,
+"                 applying correct colors to { } blocks, etc.  However, it may
+"                 cause Vim to slow down on large files.
+"
+"         let php_asp_tags = 1/0  [default 0]
+"             ... for highlighting ASP-style short tags
+"
+"         let php_noShortTags = 1/0  [default 0]
+"             ... don't sync <? ?> as php
+"
 "         let php_oldStyle = 1
 "             ... for using old colorstyle
 "
@@ -131,6 +150,10 @@
 "             ... 1: for folding classes and functions
 "                 2: for folding all { } regions
 "                 3: for folding only functions
+"
+"         let php_fold_arrays = 0/1  [default 0]
+"             ... To fold arrays as well.
+"               * requires php_folding
 "
 "         let php_sync_method = x
 "             ... x = -1 to sync by search (default)
@@ -153,7 +176,7 @@
 "   - Investigate possibilities for automatic syncing ... Vim regularly
 "     gets lost and a sync from start is required.  This is quite annoying.
 "   - test syntax against older Vims (6.4, 6.0, 5.7)
-"   - allow turning off semicolon errors
+"   - allow turning off all semicolon errors
 "
 " PHP Syntax:
 "   - add @Spell and @NoSpell in appropriate places (spell-checking inside
@@ -172,7 +195,9 @@
 "   - new group phpReservedFunction, because some parts of
 "     phpSpecialFunction can be used as a method name.
 "   - what is php_oldStyle? is it still needed?
-"
+"   - use 'nextgroup' to highlight errors when a ']' or ')' is followed by
+"     a constant/variable or function call.  This will also help find when
+"     a closing ')' is missing.
 "
 " PCRE Syntax:
 "   - decide on terminology: 'PCRE' or 'PREG'
@@ -259,6 +284,9 @@ endfunction
   " Fold Level (s:folding) {{{1
   let s:folding = s:ChooseValue('php_folding', 0)
 
+  " Fold arrays (s:fold_arrays) {{{1
+  let s:fold_arrays = (s:folding && s:ChooseValue('php_fold_arrays', 0))
+
   " Allow nested functions (s:nested_functions) {{{1
   " TODO: document this feature
   let s:nested_functions = s:ChooseValue('php_nested_functions', 1)
@@ -296,6 +324,9 @@ endfunction
 
   " Highlight parent error ) ] or } (s:parent_error_close) {{{1
   let s:parent_error_close = (s:strict_blocks && s:ChooseValue('php_parent_error_close', 1))
+
+  " Highlight invalid ';' after if/while/foreach (s:no_empty_construct) {{{1
+  let s:no_empty_construct = (s:strict_blocks && s:ChooseValue('php_empty_construct_error', 1))
 
   " Alt colors for {} around class/func/try/catch blocks (s:alt_blocks) {{{1
   let s:alt_blocks = (s:strict_blocks && s:ChooseValue('php_alt_blocks', 1))
@@ -480,7 +511,7 @@ syn case ignore
 " Function and Methods ripped from php_manual_de.tar.gz Jan 2003
 " TODO: check these against the latest PHP manual
 syn keyword	phpFunctions	apache_child_terminate apache_get_modules apache_get_version apache_getenv apache_lookup_uri apache_note apache_request_headers apache_response_headers apache_setenv ascii2ebcdic ebcdic2ascii getallheaders virtual	contained
-syn keyword	phpFunctions	array_change_key_case array_chunk array_combine array_count_values array_diff_assoc array_diff_uassoc array_diff array_fill array_filter array_flip array_intersect_assoc array_intersect array_key_exists array_keys array_map array_merge_recursive array_merge array_multisort array_pad array_pop array_push array_rand array_reduce array_reverse array_search array_shift array_slice array_splice array_sum array_udiff_assoc array_udiff_uassoc array_udiff array_unique array_unshift array_values array_walk arsort asort compact count current each end extract in_array key krsort ksort list natcasesort natsort next pos prev range reset rsort shuffle sizeof sort uasort uksort usort	contained
+syn keyword	phpFunctions	array_change_key_case array_chunk array_combine array_count_values array_diff_assoc array_diff_uassoc array_diff array_fill array_filter array_flip array_intersect_assoc array_intersect array_key_exists array_keys array_map array_merge_recursive array_merge array_multisort array_pad array_pop array_push array_rand array_reduce array_reverse array_search array_shift array_slice array_splice array_sum array_udiff_assoc array_udiff_uassoc array_udiff array_unique array_unshift array_values array_walk arsort asort compact count current each end extract in_array key krsort ksort natcasesort natsort next pos prev range reset rsort shuffle sizeof sort uasort uksort usort	contained
 syn keyword	phpFunctions	aspell_check aspell_new aspell_suggest	contained
 syn keyword	phpFunctions	bcadd bccomp bcdiv bcmod bcmul bcpow bcpowmod bcscale bcsqrt bcsub	contained
 syn keyword	phpFunctions	bzclose bzcompress bzdecompress bzerrno bzerror bzerrstr bzflush bzopen bzread bzwrite	contained
@@ -622,6 +653,20 @@ endif
 " when using strict blocks
 if s:strict_blocks
   syn keyword phpRepeat contained for nextgroup=phpForRegion skipwhite skipempty
+
+  " if looking for errors with semicolons, add the other 'nextgroups' as well
+  if s:no_empty_construct
+    syn keyword phpRepeat contained while switch nextgroup=phpConstructRegion skipwhite skipempty
+    syn keyword phpConditional contained if elseif nextgroup=phpConstructRegion skipwhite skipempty
+    syn keyword phpConditional contained else nextgroup=phpSemicolonNotAllowedHere skipwhite skipempty
+    syn keyword phpRepeat contained do nextgroup=phpDoBlock,phpSemicolonNotAllowedHere skipwhite skipempty
+    syn region phpDoBlock matchgroup=phpBlock start=/{/ end=/}/ keepend extend
+          \ contained transparent
+          \ nextgroup=phpDoWhile skipwhite skipempty
+          \ matchgroup=phpHTMLError end=/?>/
+    syn keyword phpDoWhile contained while
+    hi link phpDoWhile phpRepeat
+  endif
 endif
 
 " Switch
@@ -645,22 +690,43 @@ syn keyword	phpType	bool boolean int integer real double float string object nul
 if s:alt_arrays
   syn cluster phpClInside add=phpArrayRegion
   " TODO: should the error highlighting be optional???
-  syn region phpArrayRegion contained matchgroup=phpArrayParens start=/\<array(/ end=/)/
-        \ keepend extend contains=@phpClInside,phpArrayPair,phpArrayComma
-        \ matchgroup=Error end=/;/
+  if s:fold_arrays
+    syn region phpArrayRegion contained matchgroup=phpArrayParens start=/\<array(/ end=/)/
+          \ keepend extend contains=@phpClInside,phpArrayPair,phpArrayComma
+          \ matchgroup=Error end=/;/
+          \ fold
+  else
+    syn region phpArrayRegion contained matchgroup=phpArrayParens start=/\<array(/ end=/)/
+          \ keepend extend contains=@phpClInside,phpArrayPair,phpArrayComma
+          \ matchgroup=Error end=/;/
+  endif
   syn match phpArrayComma contained /,/
+
+  syn cluster phpClInside add=phpListRegion
+  " need to make a region for the 'list' keyword as well!!!
+  " TODO: should the error highlighting be optional???
+  " TODO: only allow variables and stuff inside the list() construct
+  syn region phpListRegion contained matchgroup=phpArrayParens start=/\<list(/ end=/)/
+        \ keepend extend contains=@phpClInside,phpListComma
+        \ matchgroup=Error end=/;/
+  syn match phpListComma contained /,/
+  hi link phpListComma phpArrayComma
 else
   " need to use a match instead of keyword here ... to stop it
   " from blocking a match later on.
   syn match phpArray contained /\<array\>/
+
+  syn keyword phpType contained list
 endif
 
 " Structure
-" TODO: should 'implements' be here?? what about 'instanceof'?
+" TODO: should 'instanceof' still be here?
 syn keyword	phpStructure instanceof parent self	contained
 
 " Operator
-syn match   phpOperator contained display /[=+%^|*!.~?:]/
+syn match   phpOperator contained display /[=+%^|*!.~:]/
+" TODO: need to match special methods everywhere
+syn match   phpOperator contained display /::/
 syn match   phpOperator contained display /&\$\@!/
 syn match   phpOperator contained display /->\@!/
 syn match   phpOperator contained display /[-+*/%^&|.]=/
@@ -669,6 +735,15 @@ syn match   phpOperator contained display /\$/
 syn match   phpOperator contained display /&&/
 syn match   phpOperator contained display /||/
 syn keyword phpOperator	contained and or xor
+
+" a match for a static function call
+syn cluster phpClInside add=phpStaticCall
+syn match phpStaticCall contained display /::\h\w*\ze\%(\_s*\)\@>(/ contains=phpOperator,@phpClMethodNames
+
+" 
+syn cluster phpClInside add=phpTernaryRegion
+syn region phpTernaryRegion matchgroup=phpOperator start=/?/ end=/:/ transparent keepend extend display
+      \ contained matchgroup=Error end=/[;)\]}]/
 
 " Peter Hodge - added support for array-building operator
 " to stop the relations from mixing this up
@@ -710,12 +785,29 @@ syn match phpUnknownSelector /->\_s*{\@=/  contained display
 " Identifier
 syn match phpIdentifier /\$\h\w*/ contained display contains=phpEnvVar,phpIntVar,phpVarSelector
     \ nextgroup=phpIdentifierIndex
+
+" match a dereference-identifier
+syn cluster phpClInside add=phpIdentifierDeref
+"syn match phpIdentifier /\$\$\h\w*/ contained display contains=phpVarSelectorDeref,phpDerefInvalid
+"syn match phpVarSelectorDeref /\$\$/ contained display
+"hi link phpVarSelectorDeref phpDefine
+syn match phpIdentifierDeref /\$\$\h\w*/ contained display contains=phpVarSelector,phpDerefInvalid
+hi link phpIdentifierDeref phpDefine
+
+" variables you can't dereference
+syn case match
+syn keyword phpDerefInvalid contained this argc argv GLOBALS
+      \ _GET _POST _REQUEST _COOKIE _SESSION _SERVER _ENV
+syn case ignore
+hi link phpDerefInvalid Error
+
 "syn match	phpIdentifierSimply	"${\h\w*}"	contains=phpOperator,phpParent	contained display
 
 " Peter Hodge:
 " - changing this item to contain all PHP inside syntax, as it
 "   is able to
 syn region phpIdentifierComplex contained display matchgroup=phpSpecialChar start=/\${/ end=/}/
+      \ keepend extend
       \ contains=@phpClInside
       \ nextgroup=phpIdentifierIndex
 
@@ -749,7 +841,7 @@ syn match phpIdentifierIndexInStringNoMiddleError /\[\]/ contained
 hi link phpIdentifierIndexInStringWrongCharsError Error
 hi link phpIdentifierIndexInStringNonDigitError Error
 hi link phpIdentifierIndexInStringNoMiddleError Error
-syn match phpIdentifierIndex /\[\d\+\]\|{\d\+}/ contained display
+syn match phpIdentifierIndex /\[\d\+\]\|{\d\+}/ contained display extend
       \ contains=phpIdentifierIndexParens
 syn match phpIdentifierIndexParens /[{}[\]]/ contained
 hi link phpIdentifierIndexParens phpParent
@@ -827,10 +919,7 @@ endif
 syn cluster phpStringSubs add=phpStringDouble,phpHereDoc,phpBacktick
 
 " String
-"  syn region phpStringDouble  matchgroup=phpQuoteDouble start=+"+ skip=+\\\\\|\\"+ end=+"+    contains=@phpAddStrings,phpSpecialChar contained extend keepend
-"  syn region phpBacktick      matchgroup=phpQuoteBacktick start=+`+ skip=+\\\\\|\\`+ end=+`+  contains=@phpAddStrings,phpSpecialChar contained extend keepend
-"  syn region phpStringSingle  matchgroup=phpQuoteSingle start=+'+ skip=+\\\\\|\\'+ end=+'+    contains=@phpAddStrings contained keepend extend
-syn region phpStringDouble  matchgroup=phpQuoteDouble start=/"/ skip=/\\./ end=/"/
+syn region phpStringDouble matchgroup=phpQuoteDouble start=/"/ skip=/\\./ end=/"/
       \ contained keepend extend contains=@phpAddStrings,phpSpecialChar
 syn region phpBacktick      matchgroup=phpQuoteBacktick start=/`/ skip=/\\./ end=/`/
       \ contained keepend extend contains=@phpAddStrings,phpSpecialChar
@@ -862,6 +951,12 @@ if version >= 600
   syn case ignore
 endif
 
+" a special match for when a semicolon is not allowed here
+if s:no_empty_construct
+  syn match phpSemicolonNotAllowedHere /;/ contained display
+  hi link phpSemicolonNotAllowedHere Error
+endif
+
 " Parent
 if s:strict_blocks
   " a block in global PHP scope
@@ -888,42 +983,55 @@ if s:strict_blocks
 
   " parenthesis for a foreach() block, not found automatically
   " (is triggered by a nextgroup=phpForeachRegion)
+  " TODO: see if the 'dispay' option on these regions is dangerous
   if s:alt_arrays
-    syn region phpForeachRegion contained matchgroup=phpParent start=/(/ end=/)/ keepend extend
-          \ contains=@phpClInside,phpArrayPair
+    syn region phpForeachRegion matchgroup=phpParent start=/(/ end=/)/ keepend extend display
+          \ contained contains=@phpClInside,phpArrayPair
+          \ nextgroup=phpSemicolonNotAllowedHere skipwhite skipempty
   endif
 
   " parenthesis for a for() block, not found automatically
   " (is triggered by a nextgroup=phpForeachRegion)
+  " TODO: see if the 'dispay' option on these regions is dangerous
   if s:alt_arrays
-    syn region phpForRegion contained matchgroup=phpParent start=/(/ end=/)/ keepend extend
-          \ contains=@phpClInside
+    syn region phpForRegion matchgroup=phpParent start=/(/ end=/)/ keepend extend display
+          \ contained contains=@phpClInside
+          \ nextgroup=phpSemicolonNotAllowedHere skipwhite skipempty
+  endif
+
+  " special parent regions for 'if/while' blocks so we can catch a semicolon
+  " which shouldn't be at the end
+  if s:no_empty_construct
+    syn region phpConstructRegion matchgroup=phpParent start=/(/ end=/)/ keepend extend display
+            \ contained contains=@phpClInside
+            \ nextgroup=phpSemicolonNotAllowedHere skipwhite skipempty
   endif
 
   " match up ( and ), as well as [ and ]
+  " TODO: see if the 'dispay' option on these regions is dangerous
   syn cluster phpClInside add=phpParentRegion
-  syn region phpParentRegion contained contains=@phpClInside keepend extend
+  syn region phpParentRegion contained contains=@phpClInside keepend extend display
         \ matchgroup=phpParent start=/(/ end=/)/
         \ matchgroup=Error end=/;/
-  syn region phpParentRegion contained contains=@phpClInside keepend extend
+  syn region phpParentRegion contained contains=@phpClInside keepend extend display
         \ matchgroup=phpParent start=/\[/ end=/\]/
         \ matchgroup=Error end=/;/
 
   " when a closing }, ) or ] is out of place ...
   if s:parent_error_close
     syn cluster phpClInside add=phpBlockError,phpParentError
-    syn match phpBlockError /}/ contained
-    syn match phpParentError /)/ contained
-    syn match phpParentError /\]/ contained
+    syn match phpBlockError  contained display /}/
+    syn match phpParentError contained display /)/
+    syn match phpParentError contained display /\]/
   endif
 
 else
-  syn match phpParent contained /{/
-  syn match phpParent contained /}/
-  syn match phpParent contained /\[/
-  syn match phpParent contained /\]/
-  syn match phpParent contained /(/
-  syn match phpParent contained /)/
+  syn match phpParent contained display /{/
+  syn match phpParent contained display /}/
+  syn match phpParent contained display /\[/
+  syn match phpParent contained display /\]/
+  syn match phpParent contained display /(/
+  syn match phpParent contained display /)/
 endif
 
 syn cluster phpClConst add=phpNull,phpBoolean,phpNumber,phpFloat,phpMagicConstant,phpCoreConstant
@@ -1437,6 +1545,7 @@ syn match phpSpecialChar /\\\$/ contained display
 " Peter Hodge - June 17 2006:
 " - match \" as a specialchar inside a double-quoted string,
 " - OR, match \' inside a single-quoted string
+" TODO: \" should not be a specialchar inside HereDoc strings
 syn match phpStringSpecialChar /\\["\\]/ contained containedin=@phpStringSubs display
 syn match phpStringSpecialChar /\\['\\]/ contained containedin=phpStringSingle display
 hi link phpStringSpecialChar phpSpecialChar
@@ -1454,7 +1563,7 @@ syn match phpMemberError /->\%(\_s*\)\@>[a-z{_$]\@!/ contained
 " different syntax highlighting for 'echo', 'print', 'switch', 'die' and 'list' keywords
 " to better indicate what they are.
 syn keyword phpMacro echo print contained
-syn keyword phpType list contained
+"syn keyword phpType list contained
 
 " Highlighting for PHP5's user-definable magic class methods
 syn cluster phpClMethodNames add=phpSpecialMethods
@@ -1505,12 +1614,22 @@ if s:show_semicolon
   " highlight the semicolon same colour as 'echo'
   syn cluster phpClConst add=phpSemicolon
   syn match phpSemicolon /;/ contained display
+
+  " look for errors with a semicolon
+  syn match phpSemicolonError contained display extend
+        \ ";\%(\%(\_s*\%(//.*$\|#.*$\|/\*\_.\{-}\*/\)\@>\)*\)\@>\_s*\%([.*/\^|&,:!=<>]\|?>\@!\|++\@!\|--\@!\)"
+        \ containedin=phpSemicolon
+  hi link phpSemicolonError Error
+
+  " need to sync back one line to capture the semicolon error properly
+  syn sync linebreaks=1
 endif
 
 " re-write return/break/continue/exit/die statements.
 if s:smart_semicolon
   syn cluster phpClFunction add=phpStatementRegion
   " with or without error on mis-matched /})]/ at end?
+  " TODO: can we make the semi-colon end-error any shorter?
   if s:strict_blocks
     syn region phpStatementRegion extend keepend transparent contained
           \ matchgroup=phpStatement end=/;/
@@ -1521,6 +1640,7 @@ if s:smart_semicolon
           \ start=/\$\@<!\<die\>/
           \ start=/\$\@<!\<throw\>/
           \ matchgroup=Error end=/}/ end=/)/ end=/\]/
+          \ matchgroup=Error end=/;\_s*\%([.*\^|&,:!=<>]\|?>\@!\|\/[/*]\@!\|++\@!\|--\@!\)/
   else
     syn region phpStatementRegion extend keepend transparent contained
           \ matchgroup=phpStatement end=/;/
@@ -1574,7 +1694,7 @@ if php_sync_method == -1
     syn sync match phpRegionSync grouphere phpRegion "^\s*<?\(php\)\=\s*$"
   endif
   syn sync match phpRegionSync grouphere phpRegionSc +^\s*<script language="php">\s*$+
-  if exists("php_asp_tags")
+  if s:asp_tags
     syn sync match phpRegionSync grouphere phpRegionAsp "^\s*<%\(=\)\=\s*$"
   endif
   syn sync match phpRegionSync grouphere NONE "^\s*?>\s*$"
@@ -2030,7 +2150,10 @@ if s:show_pcre
         hi link phpPREGArray phpArray
 
         " a special match to open a pattern string immediately after a '('
-        syn region phpPREGStringStarter start=/\%((\_s*\)\@<=\z(['"]\)/ end=/\z1/ extend 
+        " TODO: will this work as a match instead?
+"        syn region phpPREGStringStarter start=/\%((\_s*\)\@<=\z(['"]\)/ end=/\z1/ extend 
+"              \ contained contains=@phpPREGString_any
+        syn match phpPREGStringStarter /\%((\_s*\)\@<=['"]/ extend 
               \ contained contains=@phpPREGString_any
 
         " TODO: move 'hi link' commands out of here
@@ -2054,13 +2177,15 @@ if s:show_pcre
 
       " match a phpString (single or double-quoted) which is able to contain a
       " pregPattern
-      " NOTE: the 'extend' option is necessary to prevent '?>' inside the pattern
-      " from ending the phpRegion
+      " NOTE: we can only error on comma-ending as long as the delimiter is
+      " not a comma!!!
       syn cluster phpPREGString_any add=phpPREGStringSingle,phpPREGStringDouble
-      syn region phpPREGStringSingle matchgroup=phpQuoteSingle start=/'/ end=/'/
+      syn region phpPREGStringSingle matchgroup=phpQuoteSingle start=/'\ze\z(.\)/ end=/'/
         \ keepend extend contained contains=pregPattern_S
-      syn region phpPREGStringDouble matchgroup=phpQuoteSingle start=/"/ end=/"/
+        \ matchgroup=Error end=/\z1\@!,/
+      syn region phpPREGStringDouble matchgroup=phpQuoteSingle start=/"\ze\z(.\)/ end=/"/
         \ keepend extend contained contains=pregPattern_D
+        \ matchgroup=Error end=/\z1\@!,/
 
       " match a single-quoted string inside an array, followed by a comma
       " and another string
@@ -2128,6 +2253,14 @@ if s:show_pcre
         \ keepend extend
         \ contained nextgroup=pregOptionError_D
         \ contains=phpIdentifierInString,phpIdentifierInStringComplex
+
+      " TODO: work out how to have '$' as delimiter in a double-quoted string
+"      syn region pregPattern_D matchgroup=pregDelimiter
+"        \ start=/\\\$\|\$[a-z_]\@!\%({[a-z_$]\)\@!/
+"        \ end=/\\\$\|\$[a-z_]\@!\%({[a-z_$]\)\@!/ skip=/\\\{4}\|\\\{3}[^$]\|\\\\\$/
+"        \ keepend extend
+"        \ contained nextgroup=pregOptionError_D
+"        \ contains=phpIdentifierInString,phpIdentifierInStringComplex
 
       " TODO move hi link out of here
       hi link pregPattern_S pregPattern
@@ -2262,7 +2395,8 @@ if s:show_pcre
 
     " 10) Match PCRE pattern options {{{
       syn match pregOptionError_S /\%(\\[\\']\|[^']\)\+/ contained contains=pregOption display
-      syn match pregOptionError_D /\%(\\[\\"]\|[^"]\)\+/ contained contains=pregOption display
+      syn match pregOptionError_D /\%(\\[\\"]\|[^"]\)\+/ contained display
+            \ contains=pregOption,phpIdentifierInString,phpIdentifierInStringComplex
       syn match pregOption /\C[eimsuxADSUX]\+/ contained display
       " TODO: move hi links out of here?
       hi link pregOptionError_S pregOptionError
